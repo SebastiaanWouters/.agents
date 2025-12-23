@@ -25,6 +25,9 @@
 - do not cast to any
 - do not add explicit return types to functions.
 
+### tooling/library docs / commands / examples
+- use btca skill to learn / gather context on how to use a tool/library and when user asks about it or you are unsure about how to use a tool/library. use it proactively.
+
 ### one-off scripts
 - use one-off scripts to perform tasks that take multiple steps to complete and cannot be executed a a single command.
 - write these scripts in typescript and execute using bun. place them in a tmp folder.
