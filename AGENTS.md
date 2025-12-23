@@ -1,6 +1,6 @@
 ## AGENT GUIDELINES
 
-### GENERAL GUIDELINES
+### general guidelines
 - in all interactions, plans and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
 - follow DRY (Don't Repeat Yourself) principles.
 - follow KISS (Keep It Simple, Stupid) principles.
@@ -14,6 +14,7 @@
 - never manage dev servers yourself, always assume it is managed externally.
 - always clean up after yourself. remove temporary files and unused code.
 - always keep README.md up to date with the current state of the project.
+- use rust style Result<T, E> in favor of try/catch for error handling.
 
 ### git
 - use conventional commits guidelines for commit messages.
@@ -21,7 +22,6 @@
 
 ### typescript
 - do not cast to any
-- use rust style Result<T, E> for error handling.
 - do not add explicit return types to functions.
 
 ### one-off scripts
