@@ -1,6 +1,6 @@
-# AGENT GUIDELINES
+## AGENT GUIDELINES
 
-## general guidelines
+### GENERAL GUIDELINES
 - in all interactions, plans and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
 - follow DRY (Don't Repeat Yourself) principles.
 - follow KISS (Keep It Simple, Stupid) principles.
@@ -13,24 +13,17 @@
 - in all plans, list any unresolved questions at the end, if any.
 - never manage dev servers yourself, always assume it is managed externally.
 - always clean up after yourself. remove temporary files and unused code.
+- always keep README.md up to date with the current state of the project.
 
-## git
+### git
 - use conventional commits guidelines for commit messages.
 - never mention the agent in the commit message.
-- add .agents folder to .gitignore.
 
-## typescript
+### typescript
 - do not cast to any
 - use rust style Result<T, E> for error handling.
 - do not add explicit return types to functions.
 
-## agentic workflow
-- always read .agents/context.md to understand the current context and state of the project.
-
-## context / state management
-- keep track of todos in .agents/tasks/<task_name>.md, update progress in real time.
-- keep track of important architectural decisions and user feedback/rules/guidelines in .agents/context.md, keep updated.
-- remove completed tasks from .agents/tasks folder.
 ### one-off scripts
 - use one-off scripts to perform tasks that take multiple steps to complete and cannot be executed a a single command.
 - write these scripts in typescript and execute using bun.
