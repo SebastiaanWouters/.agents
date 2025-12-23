@@ -26,7 +26,7 @@
 
 ### one-off scripts
 - use one-off scripts to perform tasks that take multiple steps to complete and cannot be executed a a single command.
-- write these scripts in typescript and execute using bun.
+- write these scripts in typescript and execute using bun. place them in a tmp folder.
 
 ### longer running tasks
 - always run longer running tasks in the background and monitor their progress periodically (use tmux if available).
