@@ -9,10 +9,16 @@
 - before using an existing library/tool check which version is used in package manager files.
 - when working with a library/tool, always check the documentation and examples for the correct version.
 - in all plans, list any unresolved questions at the end, if any.
-- always use a tmux session for longer running background tasks and monitor their progress.
+- always run longer running tasks in the background and monitor their progress periodically (use tmux if available).
+- add sensible timeouts for cli commands to prevent hanging.
+- never manage dev servers yourself, always assume it is managed externally.
+- always clean up after yourself. remove temporary files and unused code.
 
 ### git
-- use conventional commits guidelines for commit messages. never mention the agent in the commit message.
+- use conventional commits guidelines for commit messages.
+- never mention the agent in the commit message.
 
 ### typescript
 - do not cast to any
+- use rust style Result<T, E> for error handling.
+- do not add explicit return types to functions.
