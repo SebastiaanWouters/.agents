@@ -14,6 +14,7 @@
 - never manage dev servers yourself, always assume it is managed externally.
 - always clean up after yourself. remove temporary files and unused code.
 - always keep README.md up to date with the current state of the project.
+- use latest stable version of tools and libraries.
 - use rust style Result<T, E> in favor of try/catch for error handling.
 
 ### git
