@@ -16,6 +16,7 @@
 - always keep README.md up to date with the current state of the project.
 - use latest stable version of tools and libraries.
 - use rust style Result<T, E> in favor of try/catch for error handling.
+- fo not create markdown files to summarize session, only when asked
 
 ### git
 - use conventional commits guidelines for commit messages.
