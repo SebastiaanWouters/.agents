@@ -162,6 +162,12 @@ User instructions override default behavior.
 - Mixing unrelated changes
 - Huge commits with many unrelated changes
 - Empty or unclear descriptions
+- Committing files that should NOT be in version control:
+  - Ephemeral files (logs, temp files, cache)
+  - Local config (`.env.local`, IDE settings, personal configs)
+  - Secret/sensitive data (API keys, credentials, tokens)
+  - Build artifacts (dist/, node_modules/, compiled output)
+  - OS files (.DS_Store, Thumbs.db)
 
 ### Prefer
 - Targeted `git add <files>`
