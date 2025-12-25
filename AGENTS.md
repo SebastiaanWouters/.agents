@@ -16,11 +16,13 @@
 - always keep README.md up to date with the current state of the project.
 - use latest stable version of tools and libraries.
 - use rust style Result<T, E> in favor of try/catch for error handling.
-- fo not create markdown files to summarize session, only when asked
+- do not create markdown files to summarize session, only when asked
+- never execute destructive commands (rm -rf, drop database, etc.) without explicit user confirmation
 
 ### git
 - use conventional commits guidelines for commit messages.
 - never mention the agent in the commit message.
+- never push to remote unless explicitly asked by user.
 
 ### typescript
 - do not cast to any
