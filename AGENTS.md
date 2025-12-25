@@ -19,6 +19,7 @@
 - use rust style Result<T, E> in favor of try/catch for error handling.
 - do not create markdown files to summarize session, only when asked
 - never execute destructive commands (rm -rf, drop database, etc.) without explicit user confirmation
+- treat warnings as errors
 
 ### git
 - use conventional commits guidelines for commit messages.
