@@ -14,6 +14,8 @@ Agent guidelines and skills for AI coding assistants.
     ├── decompose/        # break specs into task beads
     ├── dev-browser/      # browser automation
     ├── frontend-design/  # build distinctive UIs
+    ├── plan/             # create detailed technical plans
+    ├── setup/            # initialize new projects
     └── ui-review/        # review frontend changes
 ```
 
