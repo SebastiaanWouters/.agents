@@ -1,6 +1,6 @@
 ---
 name: dev-browser
-description: Browser automation with persistent state. Use for navigating websites, filling forms, screenshots, scraping, testing web apps. Triggers: "go to [url]", "click", "fill form", "screenshot", "scrape", "automate", "test website".
+description: "Browser automation with persistent state. Use for navigating websites, filling forms, screenshots, scraping, testing web apps. Triggers: go to [url], click, fill form, screenshot, scrape, automate, test website."
 ---
 
 # Dev Browser
