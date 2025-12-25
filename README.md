@@ -22,8 +22,8 @@ Agent guidelines and skills for AI coding assistants.
 | Tool | Description | Repository |
 |------|-------------|------------|
 | btca | Query library/framework source code for context | [github.com/SebastiaanWouters/btca](https://github.com/SebastiaanWouters/btca) |
-| bv | TBD | [github.com/SebastiaanWouters/bv](https://github.com/SebastiaanWouters/bv) |
-| bd | TBD | [github.com/SebastiaanWouters/bd](https://github.com/SebastiaanWouters/bd) |
+| bv | Beads viewer - view/manage bead task files | [github.com/Dicklesworthstone/beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) |
+| bd | Beads - atomic task format for AI agents | [github.com/steveyegge/beads](https://github.com/steveyegge/beads) |
 
 ## Usage
 
