@@ -27,4 +27,11 @@ Agent guidelines and skills for AI coding assistants.
 
 ## Usage
 
-Place `.agents` folder in your project root. AI assistants will read `AGENTS.md` for guidelines and load skills as needed.
+Copy skills to your agent's skills folder:
+
+| Agent | Skills Location |
+|-------|-----------------|
+| OpenCode | `.opencode/skills/` |
+| Claude Code | `.claude/skills/` |
+
+Copy `AGENTS.md` to your project root (or merge with existing agent instructions).
