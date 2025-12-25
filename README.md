@@ -22,6 +22,7 @@ Agent guidelines and skills for AI coding assistants.
 | Tool | Description | Repository |
 |------|-------------|------------|
 | bun | JavaScript runtime and package manager | [bun.sh](https://bun.sh) |
+| chromium | Browser for dev-browser automation | `apt install chromium-browser` |
 | btca | Query library/framework source code for context | [github.com/davis7dotsh/better-context](https://github.com/davis7dotsh/better-context) |
 | bv | Beads viewer - view/manage bead task files | [github.com/Dicklesworthstone/beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) |
 | bd | Beads - atomic task format for AI agents | [github.com/steveyegge/beads](https://github.com/steveyegge/beads) |
