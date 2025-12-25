@@ -15,6 +15,10 @@ Browser automation that maintains page state across script executions. Write sma
 
 **Visual feedback**: Take screenshots to see what the user sees and iterate on design or debug layout issues.
 
+## Dependencies
+
+- [bun](https://bun.sh) - JavaScript runtime and package manager
+
 ## Setup
 
 First, start the dev-browser server using the startup script:
@@ -40,7 +44,7 @@ The server script accepts the following flags:
 
 The first run may take longer while dependencies are installed. Subsequent runs will start faster.
 
-**Important:** Scripts must be run with `npx tsx` (not `npm run`) due to Playwright WebSocket compatibility.
+**Important:** Scripts must be run with `bun` (not `npm run`) due to Playwright WebSocket compatibility.
 
 The server starts a Chromium browser with a REST API for page management (default: `http://localhost:9222`).
 
@@ -64,7 +68,7 @@ Execute scripts inline using heredocs—no need to write files for one-off autom
 > ```
 
 ```bash
-cd skills/dev-browser && npx tsx <<'EOF'
+cd skills/dev-browser && bun <<'EOF'
 import { connect } from "@/client.js";
 const client = await connect();
 const page = await client.page("homepage");
@@ -84,7 +88,7 @@ EOF
 Use the `@/client.js` import path for all scripts.
 
 ```bash
-cd skills/dev-browser && npx tsx <<'EOF'
+cd skills/dev-browser && bun <<'EOF'
 import { connect, waitForPageLoad } from "@/client.js";
 
 const client = await connect();

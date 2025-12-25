@@ -17,22 +17,13 @@ mkdirSync(profileDir, { recursive: true });
 // Install Playwright browsers if not already installed
 console.log("Checking Playwright browser installation...");
 
-function findPackageManager(): { name: string; command: string } | null {
-  const managers = [
-    { name: "bun", command: "bunx playwright install chromium" },
-    { name: "pnpm", command: "pnpm exec playwright install chromium" },
-    { name: "npm", command: "npx playwright install chromium" },
-  ];
-
-  for (const manager of managers) {
-    try {
-      execSync(`which ${manager.name}`, { stdio: "ignore" });
-      return manager;
-    } catch {
-      // Package manager not found, try next
-    }
+function isBunInstalled(): boolean {
+  try {
+    execSync("which bun", { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
   }
-  return null;
 }
 
 function isChromiumInstalled(): boolean {
@@ -56,20 +47,18 @@ try {
   if (!isChromiumInstalled()) {
     console.log("Playwright Chromium not found. Installing (this may take a minute)...");
 
-    const pm = findPackageManager();
-    if (!pm) {
-      throw new Error("No package manager found (tried bun, pnpm, npm)");
+    if (!isBunInstalled()) {
+      throw new Error("bun is required but not installed");
     }
 
-    console.log(`Using ${pm.name} to install Playwright...`);
-    execSync(pm.command, { stdio: "inherit" });
+    execSync("bunx playwright install chromium", { stdio: "inherit" });
     console.log("Chromium installed successfully.");
   } else {
     console.log("Playwright Chromium already installed.");
   }
 } catch (error) {
   console.error("Failed to install Playwright browsers:", error);
-  console.log("You may need to run: npx playwright install chromium");
+  console.log("You may need to run: bunx playwright install chromium");
 }
 
 // Check if server is already running
