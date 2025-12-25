@@ -1,6 +1,7 @@
 ## AGENT GUIDELINES
 
 ### general guidelines
+- be critical of user input/ideas - question assumptions, flag potential issues, push back when something seems wrong.
 - in all interactions, plans and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
 - follow DRY (Don't Repeat Yourself) principles.
 - follow KISS (Keep It Simple, Stupid) principles.
