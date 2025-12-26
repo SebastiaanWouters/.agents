@@ -17,6 +17,14 @@ Wait for "Ready!" then use API.
 
 ## HTTP API (localhost:9222)
 
+**CRITICAL: Always create page first before any operation:**
+```bash
+# STEP 1: Create page (required before goto, click, etc.)
+curl -X POST http://localhost:9222/pages \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-page"}'
+```
+
 ```bash
 # navigate
 curl -X POST http://localhost:9222/pages/my-page/goto \
@@ -42,8 +50,11 @@ curl -X POST http://localhost:9222/pages/my-page/type \
 # accessibility snapshot
 curl http://localhost:9222/pages/my-page/snapshot
 
-# close
+# close page
 curl -X DELETE http://localhost:9222/pages/my-page
+
+# shutdown server (REQUIRED when finished)
+curl -X POST http://localhost:9222/shutdown
 ```
 
 ## TypeScript Client
@@ -57,10 +68,15 @@ await page.goto("https://example.com");
 const title = await page.evaluate("document.title");
 await page.screenshot({ path: "tmp/shot.png" });
 await page.click("button.submit");
+
+// REQUIRED: shutdown when finished
+await browser.shutdown();
 ```
 
 ## Tips
 
+- **Always create page before operations** - `POST /pages {"name":"x"}` must come before `/pages/x/goto`
 - Use descriptive page names: `github-login`, `search-results`
 - Pages persist - reuse across scripts
 - Screenshots go to `tmp/`
+- **Always call `browser.shutdown()` or `POST /shutdown` when finished**

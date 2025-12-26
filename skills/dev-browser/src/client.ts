@@ -18,6 +18,9 @@ export interface DevBrowser {
   
   /** Close a page */
   close(name: string): Promise<void>;
+  
+  /** Shutdown the server (closes all pages and browser) */
+  shutdown(): Promise<void>;
 }
 
 export interface DevBrowserPage {
@@ -62,13 +65,13 @@ export async function connect(serverUrl = "http://localhost:9222"): Promise<DevB
       body: body ? JSON.stringify(body) : undefined,
     });
     
-    const data = await res.json();
+    const data = await res.json() as T & { error?: string };
     
     if (!res.ok) {
       throw new Error(data.error || `Request failed: ${res.status}`);
     }
     
-    return data as T;
+    return data;
   }
   
   return {
@@ -127,6 +130,10 @@ export async function connect(serverUrl = "http://localhost:9222"): Promise<DevB
     
     async close(name: string): Promise<void> {
       await request(`/pages/${encodeURIComponent(name)}`, "DELETE");
+    },
+    
+    async shutdown(): Promise<void> {
+      await request("/shutdown", "POST");
     },
   };
 }

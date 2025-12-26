@@ -21,6 +21,7 @@ const HEADLESS = process.env.HEADLESS === "true";
 const pages = new Map<string, Page>();
 let browser: Browser | null = null;
 let wsEndpoint: string | null = null;
+let server: ReturnType<typeof Bun.serve> | null = null;
 
 // Find Chrome executable
 function findChrome(): string | null {
@@ -40,7 +41,8 @@ function findChrome(): string | null {
   
   try {
     const result = execSync("which google-chrome || which chromium || which chromium-browser 2>/dev/null", { encoding: "utf-8" }).trim();
-    if (result) return result.split("\n")[0];
+    const first = result.split("\n")[0];
+    if (first) return first;
   } catch {}
   
   return null;
@@ -84,9 +86,15 @@ async function startBrowser(): Promise<void> {
   console.log(`WebSocket: ${wsEndpoint}`);
   
   browser.on("disconnected", () => {
-    console.log("Browser disconnected");
-    process.exit(1);
+    console.log("Browser disconnected unexpectedly");
+    shutdown();
   });
+}
+
+function getPageName(path: string): string {
+  const segment = path.split("/")[2];
+  if (!segment) throw new Error("Invalid path: missing page name");
+  return decodeURIComponent(segment);
 }
 
 // HTTP request handler
@@ -110,6 +118,12 @@ async function handleRequest(req: Request): Promise<Response> {
     // GET / - server info
     if (method === "GET" && path === "/") {
       return Response.json({ wsEndpoint, pages: [...pages.keys()] }, { headers });
+    }
+    
+    // POST /shutdown - graceful shutdown
+    if (method === "POST" && path === "/shutdown") {
+      setTimeout(() => shutdown(), 100);
+      return Response.json({ success: true, message: "Shutting down..." }, { headers });
     }
     
     // GET /pages - list pages
@@ -158,7 +172,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // POST /pages/:name/goto - navigate
     if (method === "POST" && path.match(/^\/pages\/[^/]+\/goto$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -176,7 +190,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // POST /pages/:name/evaluate - run JS
     if (method === "POST" && path.match(/^\/pages\/[^/]+\/evaluate$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -191,7 +205,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // POST /pages/:name/screenshot - take screenshot
     if (method === "POST" && path.match(/^\/pages\/[^/]+\/screenshot$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -208,7 +222,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // POST /pages/:name/click - click element
     if (method === "POST" && path.match(/^\/pages\/[^/]+\/click$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -223,7 +237,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // POST /pages/:name/type - type text
     if (method === "POST" && path.match(/^\/pages\/[^/]+\/type$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -238,7 +252,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // GET /pages/:name/content - get page HTML
     if (method === "GET" && path.match(/^\/pages\/[^/]+\/content$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -251,7 +265,7 @@ async function handleRequest(req: Request): Promise<Response> {
     
     // GET /pages/:name/snapshot - get accessibility tree
     if (method === "GET" && path.match(/^\/pages\/[^/]+\/snapshot$/)) {
-      const name = decodeURIComponent(path.split("/")[2]);
+      const name = getPageName(path);
       const page = pages.get(name);
       
       if (!page) {
@@ -272,16 +286,38 @@ async function handleRequest(req: Request): Promise<Response> {
 }
 
 // Graceful shutdown
+let isShuttingDown = false;
 async function shutdown(): Promise<void> {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  
   console.log("\nShutting down...");
   
-  for (const [, page] of pages) {
-    try { await page.close(); } catch {}
+  // Close all pages
+  for (const [name, page] of pages) {
+    try { 
+      console.log(`  Closing page: ${name}`);
+      await page.close(); 
+    } catch {}
   }
   pages.clear();
   
+  // Close browser
   if (browser) {
-    try { await browser.close(); } catch {}
+    try { 
+      console.log("  Closing browser...");
+      await browser.close(); 
+    } catch {}
+    browser = null;
+  }
+  
+  // Stop server
+  if (server) {
+    try {
+      console.log("  Stopping server...");
+      server.stop();
+    } catch {}
+    server = null;
   }
   
   console.log("Goodbye!");
@@ -290,12 +326,22 @@ async function shutdown(): Promise<void> {
 
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+process.on("SIGHUP", shutdown);
+process.on("beforeExit", shutdown);
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+  shutdown();
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+  shutdown();
+});
 
 // Main
 console.log("Starting dev-browser server...");
 await startBrowser();
 
-Bun.serve({
+server = Bun.serve({
   port: PORT,
   fetch: handleRequest,
 });

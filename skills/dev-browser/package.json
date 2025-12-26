@@ -3,16 +3,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start": "bun src/server.ts",
-    "test": "bun vitest run",
-    "test:watch": "bun vitest"
+    "start": "bun src/server.ts"
   },
   "dependencies": {
     "puppeteer-core": "^24.0.0"
   },
   "devDependencies": {
     "@types/bun": "^1.2.0",
-    "typescript": "^5.0.0",
-    "vitest": "^2.1.0"
+    "typescript": "^5.0.0"
   }
 }
