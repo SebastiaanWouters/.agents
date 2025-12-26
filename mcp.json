@@ -1,0 +1,6 @@
+{
+  "browsermcp": {
+    "type": "local",
+    "command": ["npx", "-y", "@browsermcp/mcp@latest"]
+  }
+}
