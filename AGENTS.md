@@ -14,7 +14,7 @@
 - in all plans, list any unresolved questions at the end, if any.
 - never manage dev servers yourself, always assume it is managed externally.
 - always clean up after yourself. remove temporary files and unused code.
-- always keep README.md up to date with the current state of the project.
+- always keep documentation (README.md, etc.) up to date with latest changes.
 - use latest stable version of tools and libraries.
 - use rust style Result<T, E> in favor of try/catch for error handling.
 - do not create markdown files to summarize session, only when asked
@@ -30,9 +30,6 @@
 ### typescript
 - do not cast to any
 - do not add explicit return types to functions.
-
-### tooling/library docs / commands / examples
-- use btca skill to learn / gather context on how to use a tool/library and when user asks about it or you are unsure about how to use a tool/library. use it proactively.
 
 ### one-off scripts
 - use one-off scripts to perform tasks that take multiple steps to complete and cannot be executed a a single command.
