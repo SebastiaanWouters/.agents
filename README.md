@@ -7,9 +7,6 @@ Agent guidelines and skills for AI coding assistants.
 ```
 .agents/
 ├── AGENTS.md          # core guidelines
-├── commands/          # custom slash commands
-│   ├── qa.md             # run project QA tools
-│   └── review.md         # trigger code review manually
 └── skills/            # specialized skills
     ├── beads-create/     # create bead task files
     ├── beads-viewer/     # view/manage bead files
@@ -19,29 +16,22 @@ Agent guidelines and skills for AI coding assistants.
     ├── dev-browser/      # browser automation
     ├── frontend-design/  # build distinctive UIs
     ├── plan/             # create detailed technical plans
-    ├── review/           # intelligent code review (auto-triggers)
-    └── setup/            # initialize new projects
+    ├── review/           # code review with QA (auto-triggers)
+    └── setup/            # initialize projects (language-agnostic)
 ```
 
 ## Skills
 
 | Skill | Trigger | Description |
 |-------|---------|-------------|
-| review | auto | Intelligent code review - runs QA tools, applies frontend/backend checklists based on changeset |
+| review | auto | Code review with QA - runs project tools, applies frontend/backend checklists |
 | plan | manual | Create detailed technical plans for features/changes |
 | commit | manual | Generate conventional commit messages |
 | frontend-design | manual | Build distinctive, production-grade UIs |
-| setup | manual | Initialize new projects with proper structure |
+| setup | manual | Initialize projects (language-agnostic) |
 | decompose | manual | Break specs into atomic task beads |
 | btca | manual | Query library/framework source for context |
 | dev-browser | manual | Browser automation via Playwright |
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| /qa | Run project QA tools (lint, typecheck, test) |
-| /review | Trigger intelligent code review manually |
 
 ## Dependencies
 
@@ -57,5 +47,4 @@ Agent guidelines and skills for AI coding assistants.
 ## Usage
 
 - Copy skills to your agent's skills directory (e.g. `.opencode/skills/`, `.claude/skills/`)
-- Copy commands to your agent's commands directory (e.g. `.opencode/commands/`, `.claude/commands/`)
 - Copy `AGENTS.md` to project root or merge with existing instructions
