@@ -20,15 +20,16 @@ Initialize projects through iterative questioning to create well-configured star
 - Personal/work/open source?
 
 ### Tech Stack
-- Language/runtime (TS, Python, Go, Rust, Bun, Deno)
+- Language (TypeScript, Python, Go, Rust, Java, C#, etc.)
+- Runtime (Node, Bun, Deno, CPython, etc.)
 - Project type (web, API, CLI, library, full-stack, monorepo)
-- Framework (React, Vue, Next.js, Hono, etc.)
-- Database (PostgreSQL, SQLite, MongoDB) + ORM (Drizzle, Prisma)
+- Framework (varies by language/type)
+- Database + ORM/driver (if applicable)
 
 ### Dependencies
 - Core libs needed
-- Testing (Vitest, Jest, Playwright)
-- Linting/formatting (ESLint, Biome, Prettier)
+- Testing framework
+- Linting/formatting tools
 
 ### Structure
 - Organization (feature-based, layer-based, domain-driven)
@@ -45,10 +46,9 @@ Initialize projects through iterative questioning to create well-configured star
 # Setup: [Name]
 
 ## Stack
-- Runtime: [Node 20 / Bun]
-- Framework: [Next.js 14]
-- Database: [PostgreSQL + Drizzle]
-- Styling: [Tailwind]
+- Language: [e.g., Python 3.12]
+- Framework: [e.g., FastAPI]
+- Database: [e.g., PostgreSQL + SQLAlchemy]
 
 ## Dependencies
 Production: [list]
@@ -58,41 +58,25 @@ Dev: [list]
 [tree view]
 
 ## Config
-- TypeScript: strict
-- ESLint: [config]
-- Prettier: [settings]
+[language-specific config files]
 ```
 
 ## Execution
 
 1. Create directory
-2. Init package manager
+2. Init package manager / project
 3. Install deps
 4. Create structure
-5. Configure tooling (tsconfig, eslint, etc.)
-6. Setup env (.env.example)
+5. Configure tooling (linter, formatter, etc.)
+6. Setup env vars template
 7. Git init + .gitignore
 8. Create README
 
-## Scripts Template
-
-```json
-{
-  "dev": "tsx watch src/index.ts",
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "test": "vitest",
-  "lint": "eslint src/",
-  "typecheck": "tsc --noEmit"
-}
-```
-
 ## Checklist
 
-- [ ] Package manager initialized
+- [ ] Project initialized with package manager
 - [ ] Dependencies installed
-- [ ] TypeScript configured (strict)
 - [ ] Linting/formatting configured
-- [ ] Git with .gitignore
+- [ ] Git with appropriate .gitignore
 - [ ] README with getting started
-- [ ] Scripts working (dev, build, test, lint)
+- [ ] Dev/build/test scripts working
