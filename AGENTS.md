@@ -20,6 +20,7 @@
 - do not create markdown files to summarize session, only when asked
 - never execute destructive commands (rm -rf, drop database, etc.) without explicit user confirmation
 - treat warnings as errors
+- never cut corners, always endure
 
 ### git
 - use conventional commits guidelines for commit messages.
