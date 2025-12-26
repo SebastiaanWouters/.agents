@@ -38,3 +38,6 @@
 ### longer running tasks
 - always run longer running tasks in the background and monitor their progress periodically (use tmux if available).
 - add sensible timeouts for cli commands to prevent hanging.
+
+### processes
+- use killport to kill running processes on a port.

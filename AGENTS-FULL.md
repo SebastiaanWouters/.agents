@@ -20,6 +20,9 @@
 - multi-step tasks: ts scripts via bun in tmp/
 - long tasks: background + tmux; add timeouts
 
+### processes
+- use killport to kill running processes on a port.
+
 ---
 
 ## BEADS
