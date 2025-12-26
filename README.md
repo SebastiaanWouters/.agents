@@ -47,5 +47,5 @@ Agent guidelines and skills for AI coding assistants.
 
 ## Usage
 
-- Copy skills to your agent's skills directory (e.g. `.opencode/skills/`, `.claude/skills/`)
+- Copy skills to your agent's skills directory (e.g. `.opencode/skill/`, `.claude/skills/`)
 - Copy `AGENTS.md` to project root or merge with existing instructions
