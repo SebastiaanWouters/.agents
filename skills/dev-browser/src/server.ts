@@ -12,7 +12,7 @@ import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROFILE_DIR = join(__dirname, "..", "profiles", "browser-data");
+const PROFILE_DIR = process.env.USER_DATA_DIR || "/tmp/dev-browser-profile";                                                                                                 
 const TMP_DIR = join(__dirname, "..", "tmp");
 const PORT = Number(process.env.PORT) || 9222;
 const HEADLESS = process.env.HEADLESS === "true";
