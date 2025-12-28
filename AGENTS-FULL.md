@@ -31,31 +31,59 @@
 ```bash
 bd create "title" [flags] --json  # always --json
 ```
-Flags: `-t` type (bug/feature/task/epic/chore), `-p` priority (0-4), `-d` desc, `--parent id`, `--deps blocks:id|discovered-from:id|related:id`, `-l` labels, `-a` assignee
+Flags: `-t` type (bug/feature/task/epic/chore), `-p` priority (0-4: critical/high/medium/low/backlog), `-d` desc, `--parent id`, `--deps blocks:id|discovered-from:id|related:id`, `-l` labels, `-a` assignee, `--acceptance` criteria
 
 ```bash
-bd create "Fix bug" -t bug -p 1 --json
-bd create "Side issue" --deps discovered-from:bd-123 --json
+bd create "Fix auth bug" -t bug -p 1 --json
+bd create "Add OAuth" -d "Implement OAuth2" -t feature -p 1 --json
+bd create "Found SQL injection" -t bug -p 0 --deps discovered-from:bd-123 --json
 ```
 
-### bd status updates
+### bd manage
 ```bash
 bd close <id> [-r "reason"]           # close issue
 bd close <id> --suggest-next          # close + show unblocked issues
 bd reopen <id> [-r "reason"]          # reopen closed issue
 bd update <id> -s in_progress         # set status (open/in_progress/closed)
+bd delete <id>                        # delete issue and clean refs
+bd show <id>                          # view issue details
+bd list [--label] [--assignee] [-s status]  # list issues
+bd search <query>                     # text search
+bd graph                              # show dependency graph
 ```
 
-### bv (viewer)
-**NEVER bare `bv`** - blocks session. Always `--robot-*`:
+### bd dependencies
 ```bash
-bv --robot-triage              # start here - returns everything
-bv --robot-next                # single top pick
-bv --robot-plan                # dep-aware exec plan
-bv --robot-insights            # graph metrics
-bv --robot-triage | jq '.recommendations[0]'  # top pick
+bd dep add <id> <depends-on-id> [-t type]  # add dependency (type: blocks/related/parent-child/discovered-from)
+bd dep remove <id> <depends-on-id>         # remove dependency
+bd dep tree <id>                           # show dependency tree
+bd dep cycles                              # detect cycles in graph
+bd duplicate <id> --of <canonical>         # mark as duplicate of another issue
+bd relate <id1> <id2>                      # create bidirectional "see also" link
+bd unrelate <id1> <id2>                    # remove "see also" link
 ```
-Cycles in insights = bugs, fix immediately.
+
+### bv (viewer) - CRITICAL: NEVER bare bv (blocks session)!
+Always use `--robot-*` flags:
+
+**Core triage**:
+```bash
+bv --robot-triage              # comprehensive triage (start here)
+bv --robot-next                # single top recommendation
+bv --robot-plan                # dependency-respecting exec plan
+bv --robot-insights            # full graph metrics & cycles
+bv --robot-alerts              # stale issues & blocking cascades
+bv --robot-priority            # priority misalignment
+bv --robot-suggest             # duplicates, deps, labels, cycles
+bv --robot-capacity            # capacity simulation & projection
+bv --robot-forecast <id|all>   # ETA prediction
+bv --robot-graph               # dependency graph (JSON/DOT/Mermaid)
+bv --robot-file-hotspots       # files touched by most beads
+bv --robot-file-beads <path>   # beads that touched file
+bv --robot-blocker-chain <id>  # full blocker chain
+```
+
+Cycles in `--robot-insights` = bugs, fix immediately!
 
 ---
 
