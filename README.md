@@ -40,9 +40,7 @@ Agent guidelines and skills for AI coding assistants.
 | btca | Query library/framework source code for context | [github.com/davis7dotsh/better-context](https://github.com/davis7dotsh/better-context) |
 | bv | Beads viewer - view/manage bead task files | [github.com/Dicklesworthstone/beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) |
 | bd | Beads - atomic task format for AI agents | [github.com/steveyegge/beads](https://github.com/steveyegge/beads) |
-| am | Amicii - agent coordination server & CLI | [github.com/SebastiaanWouters/amicii](https://github.com/SebastiaanWouters/amicii) |
 | tmux | Terminal multiplexer for background tasks | [github.com/tmux/tmux](https://github.com/tmux/tmux) |
-| killport | Kill processes on a port | [github.com/jkfran/kill-port](https://github.com/joshfran/kill-port) |
 
 ## MCP Servers
 

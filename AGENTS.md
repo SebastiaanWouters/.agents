@@ -27,6 +27,12 @@
 - do not cast to any
 - do not add explicit return types to functions.
 
+### library/tool questions
+- use btca for unfamiliar tech, API usage, version-specific docs, implementation details
+- commands: `btca ask -r <resource> -q "<question>"`, `btca chat -r <resource>`, `btca config resources list`
+- add missing repos: `btca config resources add -n <name> -t git -u <url> -b <branch>`
+- verify solutions against actual source code, not assumptions or outdated docs
+
 ## Issue Tracking
 
 This project uses **bd (beads)** for issue tracking.
