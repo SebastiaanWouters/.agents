@@ -1,43 +1,129 @@
 ## AGENT GUIDELINES
 
-### general guidelines
-- be critical of user input/ideas - question assumptions, flag potential issues, push back when something seems wrong.
-- in all interactions, plans and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
-- follow DRY (Don't Repeat Yourself) principles.
-- follow KISS (Keep It Simple, Stupid) principles.
-- write self explaining code, only add comments if they add value to the code/developer experience.
-- all new/updated code should be covered by tests.
-- search existing code before implementing new features - look for similar patterns.
-- always consult package manager files to see what commands are available.
-- before using an existing library/tool check which version is used in package manager files.
-- when working with a library/tool, always check the documentation and examples for the correct version.
-- in all plans, list any unresolved questions at the end, if any.
-- never manage dev servers yourself, always assume it is managed externally.
-- always clean up after yourself. remove temporary files and unused code.
-- always keep documentation (README.md, etc.) up to date with latest changes.
-- use latest stable version of tools and libraries.
-- use rust style Result<T, E> in favor of try/catch for error handling.
-- do not create markdown files to summarize session, only when asked
-- never execute destructive commands (rm -rf, drop database, etc.) without explicit user confirmation
-- treat warnings as errors
-- never cut corners, always endure
+### general
+- always question, challenge, flag issues, don’t assume user is correct
+- keep all output, plans, and commits ultra-concise; skip filler grammar
+- strictly DRY and KISS; eliminate repetition and complexity
+- code must be self-explaining, minimal comments only if essential
+- test all new/modified code
+- search for similar patterns before adding anything new
+- check package manager for available commands and dependency versions; always consult docs for correct usage
+- unresolved questions? always list at the end of any plan
+- never manage/dev servers; assume externally managed
+- delete temporary / ephermal files, unused code/configs on finish
+- always update docs on change
+- always use latest stable tools/libs
+- use Result<T, E> not try/catch for errors
+- never write markdown summaries unless asked
+- destructive commands (rm -rf, drop db, etc.) only with explicit confirmation
+- treat warnings as errors, never ignore
+- never cut corners; always persist
 
 ### git
-- use conventional commits guidelines for commit messages.
-- never mention the agent in the commit message.
-- never push to remote unless explicitly asked by user.
+- use conventional commits; never mention agent in message
+- never push unless user requests
 
 ### typescript
 - do not cast to any
 - do not add explicit return types to functions.
 
-### one-off scripts
-- use one-off scripts to perform tasks that take multiple steps to complete and cannot be executed a a single command.
-- write these scripts in typescript and execute using bun. place them in a tmp folder.
+## Issue Tracking
 
-### longer running tasks
-- always run longer running tasks in the background and monitor their progress periodically (use tmux if available).
-- add sensible timeouts for cli commands to prevent hanging.
+This project uses **bd (beads)** for issue tracking.
+Run `bd prime` for workflow context, or install hooks (`bd hooks install`) for auto-injection.
 
-### processes
-- use killport to kill running processes on a port.
+**Quick reference:**
+- `bd ready` - Find unblocked work
+- `bd create "Title" --type task --priority 2` - Create issue
+- `bd close <id>` - Complete work
+- `bd sync` - Sync with git (run at session end)
+
+For full workflow details: `bd prime`
+
+### Using bv as an AI sidecar
+
+bv is a graph-aware triage engine for Beads projects (.beads/beads.jsonl). Instead of parsing JSONL or hallucinating graph traversal, use robot flags for deterministic, dependency-aware outputs with precomputed metrics (PageRank, betweenness, critical path, cycles, HITS, eigenvector, k-core).
+
+**Scope boundary:** bv handles *what to work on* (triage, priority, planning). For agent-to-agent coordination (messaging, work claiming, file reservations), use [MCP Agent Mail](https://github.com/Dicklesworthstone/mcp_agent_mail).
+
+**⚠️ CRITICAL: Use ONLY `--robot-*` flags. Bare `bv` launches an interactive TUI that blocks your session.**
+
+#### The Workflow: Start With Triage
+
+**`bv --robot-triage` is your single entry point.** It returns everything you need in one call:
+- `quick_ref`: at-a-glance counts + top 3 picks
+- `recommendations`: ranked actionable items with scores, reasons, unblock info
+- `quick_wins`: low-effort high-impact items
+- `blockers_to_clear`: items that unblock the most downstream work
+- `project_health`: status/type/priority distributions, graph metrics
+- `commands`: copy-paste shell commands for next steps
+
+bv --robot-triage        # THE MEGA-COMMAND: start here
+bv --robot-next          # Minimal: just the single top pick + claim command
+
+#### Other Commands
+
+**Planning:**
+| Command | Returns |
+|---------|---------|
+| `--robot-plan` | Parallel execution tracks with `unblocks` lists |
+| `--robot-priority` | Priority misalignment detection with confidence |
+
+**Graph Analysis:**
+| Command | Returns |
+|---------|---------|
+| `--robot-insights` | Full metrics: PageRank, betweenness, HITS (hubs/authorities), eigenvector, critical path, cycles, k-core, articulation points, slack |
+| `--robot-label-health` | Per-label health: `health_level` (healthy\|warning\|critical), `velocity_score`, `staleness`, `blocked_count` |
+| `--robot-label-flow` | Cross-label dependency: `flow_matrix`, `dependencies`, `bottleneck_labels` |
+| `--robot-label-attention [--attention-limit=N]` | Attention-ranked labels by: (pagerank × staleness × block_impact) / velocity |
+
+**History & Change Tracking:**
+| Command | Returns |
+|---------|---------|
+| `--robot-history` | Bead-to-commit correlations: `stats`, `histories` (per-bead events/commits/milestones), `commit_index` |
+| `--robot-diff --diff-since <ref>` | Changes since ref: new/closed/modified issues, cycles introduced/resolved |
+
+**Other Commands:**
+| Command | Returns |
+|---------|---------|
+| `--robot-burndown <sprint>` | Sprint burndown, scope changes, at-risk items |
+| `--robot-forecast <id\|all>` | ETA predictions with dependency-aware scheduling |
+| `--robot-alerts` | Stale issues, blocking cascades, priority mismatches |
+| `--robot-suggest` | Hygiene: duplicates, missing deps, label suggestions, cycle breaks |
+| `--robot-graph [--graph-format=json\|dot\|mermaid]` | Dependency graph export |
+| `--export-graph <file.html>` | Self-contained interactive HTML visualization |
+
+#### Scoping & Filtering
+
+bv --robot-plan --label backend              # Scope to label's subgraph
+bv --robot-insights --as-of HEAD~30          # Historical point-in-time
+bv --recipe actionable --robot-plan          # Pre-filter: ready to work (no blockers)
+bv --recipe high-impact --robot-triage       # Pre-filter: top PageRank scores
+bv --robot-triage --robot-triage-by-track    # Group by parallel work streams
+bv --robot-triage --robot-triage-by-label    # Group by domain
+
+#### Understanding Robot Output
+
+**All robot JSON includes:**
+- `data_hash` — Fingerprint of source beads.jsonl (verify consistency across calls)
+- `status` — Per-metric state: `computed|approx|timeout|skipped` + elapsed ms
+- `as_of` / `as_of_commit` — Present when using `--as-of`; contains ref and resolved SHA
+
+**Two-phase analysis:**
+- **Phase 1 (instant):** degree, topo sort, density — always available immediately
+- **Phase 2 (async, 500ms timeout):** PageRank, betweenness, HITS, eigenvector, cycles — check `status` flags
+
+**For large graphs (>500 nodes):** Some metrics may be approximated or skipped. Always check `status`.
+
+#### jq Quick Reference
+
+bv --robot-triage | jq '.quick_ref'                        # At-a-glance summary
+bv --robot-triage | jq '.recommendations[0]'               # Top recommendation
+bv --robot-plan | jq '.plan.summary.highest_impact'        # Best unblock target
+bv --robot-insights | jq '.status'                         # Check metric readiness
+bv --robot-insights | jq '.Cycles'                         # Circular deps (must fix!)
+bv --robot-label-health | jq '.results.labels[] | select(.health_level == "critical")'
+
+**Performance:** Phase 1 instant, Phase 2 async (500ms timeout). Prefer `--robot-plan` over `--robot-insights` when speed matters. Results cached by data hash.
+
+Use bv instead of parsing beads.jsonl—it computes PageRank, critical paths, cycles, and parallel tracks deterministically.
