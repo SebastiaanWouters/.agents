@@ -1,10 +1,11 @@
 # ac - Agent Copy CLI
 
-Copy AGENTS.md and skills to Claude, Codex, Amp, and OpenCode projects with ease.
+Copy AGENTS.md and skills to Claude, Codex, Amp, OpenCode, and Droid projects with ease.
 
 ## Features
 
-- **Multi-platform support**: Copy to Claude, Codex, Amp, and OpenCode
+- **Multi-platform support**: Copy to Claude, Codex, Amp, OpenCode, and Droid
+- **Dynamic AGENTS.md detection**: Automatically finds and supports all AGENTS*.md files in your project
 - **Interactive mode**: Easy selection of platforms, skills, and merge strategies
 - **Smart merging**: Intelligently handle existing files with merge/overwrite/skip options
 - **Dry run mode**: Preview changes before executing
@@ -15,7 +16,7 @@ Copy AGENTS.md and skills to Claude, Codex, Amp, and OpenCode projects with ease
 ### One-liner (recommended)
 
 ```bash
-curl -fsSL https://github.com/sebastiaanwouters/.agents/releases/latest/download/install.sh | bun run
+curl -fsSL https://github.com/sebastiaanwouters/.agents/releases/latest/download/install.sh | bash
 ```
 
 ### From cloned repository
@@ -23,15 +24,21 @@ curl -fsSL https://github.com/sebastiaanwouters/.agents/releases/latest/download
 ```bash
 git clone https://github.com/sebastiaanwouters/.agents.git
 cd .agents/ac-cli
-chmod +x install.sh
-./install.sh
+go build -o ac ./cmd/ac
+sudo cp ac /usr/local/bin/
+```
+
+### Building from source
+
+```bash
+git clone https://github.com/sebastiaanwouters/.agents.git
+cd .agents/ac-cli
+go build -o ac ./cmd/ac
 ```
 
 ### Requirements
 
-- bun (install with `curl -fsSL https://bun.sh/install | bash`)
-- bash
-- curl or wget
+- Go 1.21 or higher
 - Linux or macOS (no Windows support yet)
 
 ### Updating
@@ -39,7 +46,7 @@ chmod +x install.sh
 To update to the latest version, simply rerun the installation script:
 
 ```bash
-curl -fsSL https://github.com/sebastiaanwouters/.agents/releases/latest/download/install.sh | bun run
+curl -fsSL https://github.com/sebastiaanwouters/.agents/releases/latest/download/install.sh | bash
 ```
 
 **Note**: Your custom skills in `~/.ac` will be preserved during updates. Rerun `ac init` if you want to reset to default skills.
@@ -92,11 +99,11 @@ ac copy claude --agents-only
 # Copy only skills
 ac copy claude --skills-only
 
+# Copy specific AGENTS.md file (selects one)
+ac copy claude --agent-file AGENTS_100X.md
+
 # Copy specific skill(s)
 ac copy claude --skill plan --skill review
-
-# Copy only subagents
-ac copy claude --subagents-only
 ```
 
 ### Source and Target Directories
@@ -157,7 +164,7 @@ ac list
 Shows:
 - Available platforms and their capabilities
 - Detected `.agents/` directory
-- Available components (AGENTS.md, skills, subagents)
+- Available components (AGENTS.md, AGENTS_100X.md, AGENTS_MINIMAL.md, skills, subagents)
 
 ### Validate Platform Setup
 
@@ -167,7 +174,7 @@ ac validate claude
 
 Checks:
 - Platform configuration files exist
-- Skills have proper YAML frontmatter
+- Skills have proper YAML frontmatter (for platforms that require it)
 - Missing or invalid files
 
 ## Platform Conventions
@@ -175,9 +182,10 @@ Checks:
 | Platform | Config File | Skills Directory | Subagents |
 |----------|-------------|-----------------|------------|
 | **Claude** | `CLAUDE.md` | `.claude/skills/<name>/SKILL.md` | `.claude/agents/<name>.md` |
-| **Codex** | `AGENTS.md` | `~/.codex/skills/` | N/A |
+| **Codex** | `AGENTS.md` | `.codex/skills/` | N/A |
 | **Amp** | `AGENTS.md` | `.agents/skills/<name>/SKILL.md` | N/A |
 | **OpenCode** | `AGENTS.md` | `.opencode/skill/<name>/` | N/A |
+| **Droid** | `AGENTS.md` | `.droid/skills/<name>/SKILL.md` | N/A |
 
 ## Project Structure
 
@@ -186,21 +194,32 @@ Your `.agents/` directory should follow this structure:
 ```
 .agents/
 ├── AGENTS.md              # Main agents file (copied as AGENTS.md or CLAUDE.md)
-├── AGENTS-FULL.md         # Optional full agents file
-├── skills/                 # Skills directory
+├── AGENTS_100X.md        # Additional agent files (any AGENTS*.md files are supported)
+├── AGENTS_MINIMAL.md      # Any number of AGENTS variants can be included
+├── skills/               # Skills directory
 │   ├── plan/
 │   │   └── SKILL.md
 │   ├── review/
 │   │   └── SKILL.md
 │   └── ...
-└── subagents/              # Subagents (Claude only)
+└── subagents/            # Subagents (Claude only)
     ├── code-reviewer.md
     └── ...
 ```
 
+## Dynamic AGENTS.md Support
+
+The CLI automatically detects all `AGENTS*.md` files in your source directory. This allows you to have multiple agent configurations:
+- `AGENTS.md` - Standard agents configuration
+- `AGENTS_100X.md` - 100x productivity configuration
+- `AGENTS_MINIMAL.md` - Minimal essential guidelines
+- Any other `AGENTS*.md` files you create
+
+When copying, you can select which agent file to use via `--agent-file` flag or interactive prompt. Only one agent file is copied per platform.
+
 ## Skill Format
 
-Skills should include YAML frontmatter with `name` and `description`:
+Skills should include YAML frontmatter with `name` and `description` (for platforms that require it):
 
 ```markdown
 ---
@@ -211,6 +230,33 @@ description: A description of what this skill does and when to use it
 # My Skill
 
 Instructions for the agent...
+```
+
+## Development
+
+### Project Structure
+
+```
+ac-cli/
+├── cmd/ac/           # CLI entry point
+├── internal/
+│   ├── cli/          # CLI commands (copy, list, validate, init)
+│   ├── config/       # Configuration types and interfaces
+│   ├── fileutil/     # File utilities
+│   └── platform/     # Platform implementations
+└── go.mod           # Go module definition
+```
+
+### Building
+
+```bash
+go build -o ac ./cmd/ac
+```
+
+### Testing
+
+```bash
+go test ./...
 ```
 
 ## Examples
@@ -225,11 +271,11 @@ ac copy claude opencode amp --skill plan --skill review
 # Copy to user-level Claude directory, merging existing skills
 ac copy claude --user-level --merge merge -y
 
+# Copy specific AGENTS_100X.md file to OpenCode
+ac copy opencode --agent-file AGENTS_100X.md
+
 # Preview what would be copied to Amp
 ac copy amp --dry-run
-
-# Copy only subagents to Claude project
-ac copy claude --subagents-only --target ./my-project
 
 # Validate Claude setup in current directory
 ac validate claude

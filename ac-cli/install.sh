@@ -3,8 +3,7 @@ set -euo pipefail
 
 # Configuration
 GITHUB_REPO="sebastiaanwouters/.agents"
-INSTALL_DIR="${AC_CLI_INSTALL_DIR:-$HOME/.ac-cli}"
-BIN_LINK="${AC_CLI_BIN_LINK:-$HOME/.local/bin/ac}"
+INSTALL_DIR="${AC_CLI_INSTALL_DIR:-$HOME/.local/bin}"
 BINARY_NAME="ac"
 
 # Colors
@@ -68,7 +67,7 @@ detect_platform() {
     esac
 
     case "$arch" in
-        x86_64|amd64) arch=x64 ;;
+        x86_64|amd64) arch=amd64 ;;
         arm64|aarch64) arch=arm64 ;;
         *) error "Unsupported architecture: $arch" ;;
     esac
@@ -80,34 +79,13 @@ detect_platform() {
 check_prereqs() {
     local missing=()
 
-    command_exists curl || missing+=("curl")
-    command_exists wget || missing+=("wget")
+    command_exists curl || command_exists wget || error "Either curl or wget is required"
     command_exists chmod || missing+=("chmod")
     command_exists mkdir || missing+=("mkdir")
-    command_exists shasum || missing+=("shasum")
-    command_exists sha256sum || missing+=("sha256sum")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         error "Missing required commands: ${missing[*]}"
     fi
-}
-
-# Install bun if missing
-ensure_bun() {
-    if command_exists bun; then
-        info "bun is already installed: $(bun --version)"
-        return
-    fi
-
-    warn "bun is not installed. Installing bun..."
-    info "Running: curl -fsSL https://bun.sh/install | bash"
-    bash -c "$(curl -fsSL https://bun.sh/install)"
-
-    if ! command_exists bun; then
-        error "Failed to install bun. Please install manually: curl -fsSL https://bun.sh/install | bash"
-    fi
-
-    success "bun installed successfully"
 }
 
 # Download file with curl or wget
@@ -119,7 +97,6 @@ download_file() {
         local curl_path=$(command -v curl)
         # Check for broken snap curl
         if [[ $curl_path == *"/snap/"* ]]; then
-            # Fallback to wget
             if command_exists wget; then
                 wget -q --show-progress -O "$output" "$url"
             else
@@ -154,20 +131,24 @@ download_binary() {
     local actual_checksum
 
     if [[ $(uname -s) == "Darwin" ]]; then
-        actual_checksum=$(shasum -a 256 "$tmp_binary" | cut -d' ' -f1)
+        actual_checksum=$(shasum -a 256 "$tmp_binary" 2>/dev/null || sha256sum "$tmp_binary" 2>/dev/null | cut -d' ' -f1)
     else
-        actual_checksum=$(sha256sum "$tmp_binary" | cut -d' ' -f1)
+        actual_checksum=$(sha256sum "$tmp_binary" 2>/dev/null | cut -d' ' -f1)
     fi
 
-    info "Verifying checksum..."
-    if [[ "$actual_checksum" != "$expected_checksum" ]]; then
-        rm -f "$tmp_binary" "$tmp_checksum"
-        error "Checksum verification failed!
+    if [[ -n "$actual_checksum" ]]; then
+        info "Verifying checksum..."
+        if [[ "$actual_checksum" != "$expected_checksum" ]]; then
+            rm -f "$tmp_binary" "$tmp_checksum"
+            error "Checksum verification failed!
 Expected: $expected_checksum
 Actual: $actual_checksum"
+        fi
+        success "Checksum verified"
+    else
+        warn "Could not verify checksum (shasum/sha256sum not available)"
     fi
 
-    success "Checksum verified"
     chmod +x "$tmp_binary"
 
     rm -f "$tmp_checksum"
@@ -187,64 +168,69 @@ detect_shell() {
 # Update shell profile
 update_shell_profile() {
     local shell=$(detect_shell)
-    local bin_dir=$(dirname "$BIN_LINK")
-    local shell_profiles=()
+
+    # Create bin directory if needed
+    mkdir -p "$INSTALL_DIR"
+
+    # Copy binary
+    info "Installing to $INSTALL_DIR/$BINARY_NAME"
+    mv "$TMP_DIR/ac" "$INSTALL_DIR/$BINARY_NAME"
+
     local refresh_cmd=""
 
     case "$shell" in
         zsh)
-            shell_profiles=("$HOME/.zshrc")
-            refresh_cmd="exec \$SHELL"
+            if ! grep -q "$INSTALL_DIR" "$HOME/.zshrc" 2>/dev/null; then
+                {
+                    echo ""
+                    echo "# ac-cli"
+                    echo "export PATH=\"$INSTALL_DIR:\$PATH\""
+                } >> "$HOME/.zshrc"
+                success "Added $INSTALL_DIR to PATH in ~/.zshrc"
+                refresh_cmd="exec \$SHELL"
+            else
+                info "PATH already configured in ~/.zshrc"
+            fi
             ;;
         bash)
-            shell_profiles=("$HOME/.bashrc" "$HOME/.bash_profile")
-            [[ ${#shell_profiles[@]} -eq 0 ]] && shell_profiles=("$HOME/.bashrc")
-            refresh_cmd="source ~/.bashrc"
+            local profile="$HOME/.bashrc"
+            if [[ ! -f "$profile" ]]; then
+                profile="$HOME/.bash_profile"
+            fi
+            if ! grep -q "$INSTALL_DIR" "$profile" 2>/dev/null; then
+                {
+                    echo ""
+                    echo "# ac-cli"
+                    echo "export PATH=\"$INSTALL_DIR:\$PATH\""
+                } >> "$profile"
+                success "Added $INSTALL_DIR to PATH in $profile"
+                refresh_cmd="source $profile"
+            else
+                info "PATH already configured in $profile"
+            fi
             ;;
         fish)
-            shell_profiles=("$HOME/.config/fish/config.fish")
-            refresh_cmd="source ~/.config/fish/config.fish"
+            if ! grep -q "$INSTALL_DIR" "$HOME/.config/fish/config.fish" 2>/dev/null; then
+                mkdir -p "$HOME/.config/fish"
+                {
+                    echo ""
+                    echo "# ac-cli"
+                    echo "export PATH=\"$INSTALL_DIR:\$PATH\""
+                } >> "$HOME/.config/fish/config.fish"
+                success "Added $INSTALL_DIR to PATH in ~/.config/fish/config.fish"
+                refresh_cmd="source ~/.config/fish/config.fish"
+            else
+                info "PATH already configured in ~/.config/fish/config.fish"
+            fi
             ;;
         *)
             warn "Unknown shell: $shell"
-            warn "Please add $BIN_DIR to your PATH manually:"
-            echo "  export PATH=\"$bin_dir:\$PATH\""
-            return
+            warn "Please add $INSTALL_DIR to your PATH manually:"
+            echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
             ;;
     esac
 
-    # Create bin directory if needed
-    mkdir -p "$bin_dir"
-
-    # Copy binary
-    info "Installing to $BIN_LINK"
-    mv "$TMP_DIR/ac" "$BIN_LINK"
-
-    local updated=0
-    for profile in "${shell_profiles[@]}"; do
-        if [[ -f $profile ]] && grep -q "$bin_dir" "$profile" 2>/dev/null; then
-            info "PATH already configured in $profile"
-            continue
-        fi
-
-        # Create profile directory if needed
-        if [[ ! -f $profile ]]; then
-            mkdir -p "$(dirname "$profile")"
-            touch "$profile"
-        fi
-
-        # Add to PATH
-        {
-            echo ""
-            echo "# ac-cli"
-            echo "export PATH=\"$bin_dir:\$PATH\""
-        } >> "$profile"
-
-        success "Added $bin_dir to PATH in $profile"
-        updated=1
-    done
-
-    if [[ $updated -eq 1 ]]; then
+    if [[ -n "$refresh_cmd" ]]; then
         echo ""
         info "To activate PATH, run:"
         echo "  $refresh_cmd"
@@ -253,21 +239,20 @@ update_shell_profile() {
 
 # Verify installation
 verify_installation() {
-    if [[ ! -f "$BIN_LINK" ]]; then
-        error "Binary not found at $BIN_LINK"
+    local binary_path="$INSTALL_DIR/$BINARY_NAME"
+
+    if [[ ! -f "$binary_path" ]]; then
+        error "Binary not found at $binary_path"
     fi
 
     info "Verifying installation..."
-    if "$BIN_LINK" --help >/dev/null 2>&1; then
+    if "$binary_path" --help >/dev/null 2>&1; then
         success "ac-cli installed successfully!"
-
-        # Initialize default skills
-        info "Initializing default skills..."
-        if ! "$BIN_LINK" init; then
-            warn "Failed to initialize default skills. Run 'ac init' manually."
-        fi
+        echo ""
+        info "Binary location: $binary_path"
+        info "Run 'ac --help' to get started"
     else
-        error "Failed to verify installation. Please check $BIN_LINK is executable."
+        error "Failed to verify installation. Please check $binary_path is executable."
     fi
 }
 
@@ -279,9 +264,6 @@ main() {
 
     # Check prerequisites
     check_prereqs
-
-    # Ensure bun is installed
-    ensure_bun
 
     # Detect platform
     local platform=$(detect_platform)
@@ -300,12 +282,8 @@ main() {
     # Clean up temp dir
     rm -rf "$TMP_DIR"
 
-    echo ""
-    success "ac-cli installed successfully!"
-    info "Binary location: $BIN_LINK"
-    info "Run 'ac --help' to get started"
-    echo ""
-    info "To update: curl -fsSL https://github.com/${GITHUB_REPO}/releases/latest/download/install.sh | bun run"
+    # Verify installation
+    verify_installation
 }
 
 main "$@"
