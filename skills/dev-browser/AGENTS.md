@@ -1,1 +1,0 @@
-- use bun and typescript, no npm, node, js, pnpm.
