@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
 
 	"github.com/sebastiaanwouters/ac-cli/internal/config"
 	"github.com/sebastiaanwouters/ac-cli/internal/fileutil"
 	"github.com/sebastiaanwouters/ac-cli/internal/platform"
+	"github.com/sebastiaanwouters/ac-cli/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,6 @@ type CopyFlags struct {
 	Skills     []string
 	Merge      string
 	UserLevel  bool
-	Yes        bool
 }
 
 var copyFlags = &CopyFlags{}
@@ -45,9 +44,8 @@ func init() {
 	copyCmd.Flags().BoolVar(&copyFlags.SkillsOnly, "skills-only", false, "Copy only skills")
 	copyCmd.Flags().StringSliceVar(&copyFlags.AgentFiles, "agent-file", nil, "Specific AGENTS.md files to copy")
 	copyCmd.Flags().StringSliceVarP(&copyFlags.Skills, "skill", "k", nil, "Copy specific skill(s)")
-	copyCmd.Flags().StringVar(&copyFlags.Merge, "merge", "ask", "Merge strategy: merge, overwrite, skip, ask")
+	copyCmd.Flags().StringVar(&copyFlags.Merge, "merge", "ask", "Merge strategy: overwrite, skip, ask")
 	copyCmd.Flags().BoolVar(&copyFlags.UserLevel, "user-level", false, "Copy to user-level directory")
-	copyCmd.Flags().BoolVarP(&copyFlags.Yes, "yes", "y", false, "Skip confirmation prompts")
 }
 
 func runCopy(cmd *cobra.Command, args []string) error {
@@ -80,11 +78,7 @@ func runCopy(cmd *cobra.Command, args []string) error {
 
 	platforms := args
 	if len(platforms) == 0 {
-		fmt.Println("\nAvailable platforms:")
-		for _, name := range platform.GetNames() {
-			fmt.Printf("  - %s\n", name)
-		}
-		platform, err := selectPlatform()
+		platform, err := tui.SelectPlatform(platform.GetNames())
 		if err != nil {
 			return err
 		}
@@ -92,8 +86,7 @@ func runCopy(cmd *cobra.Command, args []string) error {
 	}
 
 	mergeStrategy := config.MergeStrategy(copyFlags.Merge)
-	if mergeStrategy != config.MergeStrategyMerge &&
-		mergeStrategy != config.MergeStrategyOverwrite &&
+	if mergeStrategy != config.MergeStrategyOverwrite &&
 		mergeStrategy != config.MergeStrategySkip &&
 		mergeStrategy != config.MergeStrategyAsk {
 		return fmt.Errorf("invalid merge strategy: %s", copyFlags.Merge)
@@ -108,38 +101,26 @@ func runCopy(cmd *cobra.Command, args []string) error {
 	copyAgents := !copyFlags.SkillsOnly
 	copySkills := !copyFlags.AgentsOnly
 
-	selectedAgentFile, err := selectAgentFile(components.AgentFiles, copyAgents, copyFlags.AgentFiles, copyFlags.Yes)
+	selectedAgentFile, err := selectAgentFile(components.AgentFiles, copyAgents, copyFlags.AgentFiles, false)
 	if err != nil {
 		return err
 	}
 
 	selectedSkills := copyFlags.Skills
 	if copySkills && len(selectedSkills) == 0 {
-		selectedSkills = components.Skills
-	}
-
-	fmt.Println("\nCopy options:")
-	fmt.Printf("  Platforms: %s\n", joinStrings(platforms))
-	fmt.Printf("  Target: %s\n", targetDir)
-	fmt.Printf("  Merge strategy: %s\n", opts.MergeStrategy)
-	fmt.Printf("  User level: %v\n", opts.UserLevel)
-	fmt.Printf("  Dry run: %v\n", opts.DryRun)
-	if selectedAgentFile != "" {
-		fmt.Printf("  Agent file: %s\n", selectedAgentFile)
-	}
-	if len(selectedSkills) > 0 {
-		fmt.Printf("  Skills: %s\n", joinStrings(selectedSkills))
-	}
-
-	if !copyFlags.Yes {
-		confirmed, err := confirmCopy(platforms, targetDir, selectedAgentFile, selectedSkills)
+		selectedSkills, err = tui.SelectSkills(components.Skills)
 		if err != nil {
 			return err
 		}
-		if !confirmed {
-			fmt.Println("Copy cancelled.")
-			return nil
-		}
+	}
+
+	confirmed, err := tui.ConfirmCopy(platforms, targetDir, selectedAgentFile, len(selectedSkills), opts.MergeStrategy)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Copy cancelled.")
+		return nil
 	}
 
 	for _, platformName := range platforms {
@@ -191,27 +172,7 @@ func selectAgentFile(files []string, copyAgents bool, agentFiles []string, skipP
 		return files[0], nil
 	}
 
-	if skipPrompt {
-		sort.Strings(files)
-		return files[0], nil
-	}
-
-	sort.Strings(files)
-	fmt.Println("\nAvailable AGENTS files (select one):")
-	for i, file := range files {
-		fmt.Printf("  %d) %s\n", i+1, file)
-	}
-	fmt.Print("Choice [1]: ")
-
-	var choice int
-	if _, err := fmt.Scanf("%d", &choice); err != nil {
-		choice = 1
-	}
-
-	if choice < 1 || choice > len(files) {
-		return files[0], nil
-	}
-	return files[choice-1], nil
+	return tui.SelectAgentFile(files)
 }
 
 func hasComponents(components *config.AvailableComponents) bool {
@@ -235,56 +196,4 @@ func printFoundComponents(components *config.AvailableComponents) {
 	if len(components.Subagents) > 0 {
 		fmt.Printf("\nFound %d subagent(s)\n", len(components.Subagents))
 	}
-}
-
-func selectPlatform() (string, error) {
-	platforms := platform.GetNames()
-	fmt.Println("\nSelect a platform to copy to:")
-	for i, name := range platforms {
-		fmt.Printf("  %d) %s\n", i+1, name)
-	}
-	fmt.Print("Choice [1]: ")
-
-	var choice int
-	if _, err := fmt.Scanf("%d", &choice); err != nil {
-		choice = 1
-	}
-
-	if choice < 1 || choice > len(platforms) {
-		return platforms[0], nil
-	}
-	return platforms[choice-1], nil
-}
-
-func confirmCopy(platforms []string, target string, agentFile string, skills []string) (bool, error) {
-	fmt.Println("\nOperations to be performed:")
-	for _, p := range platforms {
-		fmt.Printf("  Platform: %s\n", p)
-		fmt.Printf("    Target: %s\n", target)
-	}
-	if agentFile != "" {
-		fmt.Printf("  Agent file: %s\n", agentFile)
-	}
-	if len(skills) > 0 {
-		fmt.Printf("  Skills: %s\n", joinStrings(skills))
-	}
-	fmt.Print("\nProceed with copy? [y/N]: ")
-
-	var answer string
-	if _, err := fmt.Scanf("%s", &answer); err != nil {
-		return false, err
-	}
-
-	return answer == "y" || answer == "Y", nil
-}
-
-func joinStrings(slice []string) string {
-	result := ""
-	for i, s := range slice {
-		if i > 0 {
-			result += ", "
-		}
-		result += s
-	}
-	return result
 }

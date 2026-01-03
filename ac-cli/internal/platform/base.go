@@ -6,6 +6,7 @@ import (
 
 	"github.com/sebastiaanwouters/ac-cli/internal/config"
 	"github.com/sebastiaanwouters/ac-cli/internal/fileutil"
+	"github.com/sebastiaanwouters/ac-cli/internal/tui"
 )
 
 type BasePlatform struct {
@@ -81,34 +82,19 @@ func (p *BasePlatform) CopyAgents(source, target string, opts config.CopyOptions
 		return nil
 	}
 
-	if exists && opts.MergeStrategy == config.MergeStrategyMerge {
-		if err := fileutil.MergeMarkdownFiles(source, agentsPath, "\n\n---\n\n"); err != nil {
-			return err
-		}
-		fmt.Printf("Merged %s to %s\n", sourceBasename, agentsPath)
-		return nil
-	}
-
 	if exists && opts.MergeStrategy == config.MergeStrategyAsk {
-		answer, err := p.askForMerge(agentsPath, false)
+		confirmed, err := tui.ConfirmOverwrite(agentsPath)
 		if err != nil {
 			return err
 		}
-		if answer == config.MergeStrategySkip {
+		if !confirmed {
 			fmt.Printf("Skipping %s\n", sourceBasename)
 			return nil
 		}
-		if answer == config.MergeStrategyOverwrite {
-			if err := fileutil.CopyFile(source, agentsPath, true); err != nil {
-				return err
-			}
-			fmt.Printf("Copied %s to %s (overwritten)\n", sourceBasename, agentsPath)
-			return nil
-		}
-		if err := fileutil.MergeMarkdownFiles(source, agentsPath, "\n\n---\n\n"); err != nil {
+		if err := fileutil.CopyFile(source, agentsPath, true); err != nil {
 			return err
 		}
-		fmt.Printf("Merged %s to %s\n", sourceBasename, agentsPath)
+		fmt.Printf("Copied %s to %s (overwritten)\n", sourceBasename, agentsPath)
 		return nil
 	}
 
@@ -142,34 +128,19 @@ func (p *BasePlatform) CopySkill(skillName, sourceDir, targetDir string, opts co
 		return nil
 	}
 
-	if exists && opts.MergeStrategy == config.MergeStrategyMerge {
-		if err := p.mergeSkillDirectories(sourceSkillPath, destSkillPath); err != nil {
-			return err
-		}
-		fmt.Printf("Merged skill %s\n", skillName)
-		return nil
-	}
-
 	if exists && opts.MergeStrategy == config.MergeStrategyAsk {
-		answer, err := p.askForMerge(destSkillPath, true)
+		confirmed, err := tui.ConfirmOverwrite(destSkillPath)
 		if err != nil {
 			return err
 		}
-		if answer == config.MergeStrategySkip {
+		if !confirmed {
 			fmt.Printf("Skipping skill %s\n", skillName)
 			return nil
 		}
-		if answer == config.MergeStrategyOverwrite {
-			if err := fileutil.CopyDir(sourceSkillPath, destSkillPath); err != nil {
-				return err
-			}
-			fmt.Printf("Copied skill %s (overwritten)\n", skillName)
-			return nil
-		}
-		if err := p.mergeSkillDirectories(sourceSkillPath, destSkillPath); err != nil {
+		if err := fileutil.CopyDir(sourceSkillPath, destSkillPath); err != nil {
 			return err
 		}
-		fmt.Printf("Merged skill %s\n", skillName)
+		fmt.Printf("Copied skill %s (overwritten)\n", skillName)
 		return nil
 	}
 
@@ -203,34 +174,19 @@ func (p *BasePlatform) CopySubagent(agentName, sourceDir, targetDir string, opts
 		return nil
 	}
 
-	if exists && opts.MergeStrategy == config.MergeStrategyMerge {
-		if err := fileutil.MergeMarkdownFiles(sourceAgentPath, destAgentPath, "\n\n---\n\n"); err != nil {
-			return err
-		}
-		fmt.Printf("Merged subagent %s\n", agentName)
-		return nil
-	}
-
 	if exists && opts.MergeStrategy == config.MergeStrategyAsk {
-		answer, err := p.askForMerge(destAgentPath, false)
+		confirmed, err := tui.ConfirmOverwrite(destAgentPath)
 		if err != nil {
 			return err
 		}
-		if answer == config.MergeStrategySkip {
+		if !confirmed {
 			fmt.Printf("Skipping subagent %s\n", agentName)
 			return nil
 		}
-		if answer == config.MergeStrategyOverwrite {
-			if err := fileutil.CopyFile(sourceAgentPath, destAgentPath, true); err != nil {
-				return err
-			}
-			fmt.Printf("Copied subagent %s (overwritten)\n", agentName)
-			return nil
-		}
-		if err := fileutil.MergeMarkdownFiles(sourceAgentPath, destAgentPath, "\n\n---\n\n"); err != nil {
+		if err := fileutil.CopyFile(sourceAgentPath, destAgentPath, true); err != nil {
 			return err
 		}
-		fmt.Printf("Merged subagent %s\n", agentName)
+		fmt.Printf("Copied subagent %s (overwritten)\n", agentName)
 		return nil
 	}
 
@@ -294,55 +250,3 @@ func (p *BasePlatform) GetSubagentsPath(target string) string {
 	return filepath.Join(target, p.subagentsDir)
 }
 
-func (p *BasePlatform) mergeSkillDirectories(source, dest string) error {
-	if err := fileutil.EnsureDir(dest); err != nil {
-		return err
-	}
-
-	sourceFiles, err := fileutil.ListFiles(source)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range sourceFiles {
-		sourceFile := filepath.Join(source, file)
-		destFile := filepath.Join(dest, file)
-
-		if fileutil.FileExists(destFile) {
-			if err := fileutil.MergeMarkdownFiles(sourceFile, destFile, "\n\n---\n\n"); err != nil {
-				return err
-			}
-		} else {
-			if err := fileutil.CopyFile(sourceFile, destFile, false); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func (p *BasePlatform) askForMerge(filePath string, isDir bool) (config.MergeStrategy, error) {
-	fmt.Printf("\n%s exists: %s\n", map[bool]string{true: "Directory", false: "File"}[isDir], filePath)
-	fmt.Println("What do you want to do?")
-	fmt.Println("  1) Merge")
-	fmt.Println("  2) Overwrite")
-	fmt.Println("  3) Skip")
-	fmt.Print("Choice [1-3]: ")
-
-	var choice int
-	if _, err := fmt.Scanf("%d", &choice); err != nil {
-		return config.MergeStrategySkip, err
-	}
-
-	switch choice {
-	case 1:
-		return config.MergeStrategyMerge, nil
-	case 2:
-		return config.MergeStrategyOverwrite, nil
-	case 3:
-		return config.MergeStrategySkip, nil
-	default:
-		return config.MergeStrategySkip, nil
-	}
-}

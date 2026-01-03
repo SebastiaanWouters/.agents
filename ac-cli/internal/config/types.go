@@ -3,7 +3,6 @@ package config
 type MergeStrategy string
 
 const (
-	MergeStrategyMerge     MergeStrategy = "merge"
 	MergeStrategyOverwrite MergeStrategy = "overwrite"
 	MergeStrategySkip      MergeStrategy = "skip"
 	MergeStrategyAsk       MergeStrategy = "ask"
