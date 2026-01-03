@@ -9,11 +9,9 @@ Agent guidelines and skills for AI coding assistants.
 ├── AGENTS.md          # core guidelines
 ├── mcp.json           # MCP server configs
 └── skills/            # specialized skills
-    ├── beads-create/     # create bead task files
-    ├── beads-viewer/     # view/manage bead files
     ├── btca/             # query library/framework docs
     ├── commit/           # intelligent git commits
-    ├── decompose/        # break specs into task beads
+    ├── decompose/        # break specs into atomic tickets
     ├── frontend-design/  # build distinctive UIs
     ├── plan/             # create detailed technical plans
     ├── review/           # code review with QA (auto-triggers)
@@ -29,7 +27,7 @@ Agent guidelines and skills for AI coding assistants.
 | commit | manual | Generate conventional commit messages |
 | frontend-design | manual | Build distinctive, production-grade UIs |
 | setup | manual | Initialize projects (language-agnostic) |
-| decompose | manual | Break specs into atomic task beads |
+| decompose | manual | Break specs into atomic tickets |
 | btca | manual | Query library/framework source for context |
 
 ## Dependencies
@@ -38,8 +36,7 @@ Agent guidelines and skills for AI coding assistants.
 |------|-------------|------------|
 | bun | JavaScript runtime and package manager | [bun.sh](https://bun.sh) |
 | btca | Query library/framework source code for context | [github.com/davis7dotsh/better-context](https://github.com/davis7dotsh/better-context) |
-| bv | Beads viewer - view/manage bead task files | [github.com/Dicklesworthstone/beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) |
-| bd | Beads - atomic task format for AI agents | [github.com/steveyegge/beads](https://github.com/steveyegge/beads) |
+| tk | Minimal ticket system with dependency tracking | [github.com/wedow/ticket](https://github.com/wedow/ticket) |
 | tmux | Terminal multiplexer for background tasks | [github.com/tmux/tmux](https://github.com/tmux/tmux) |
 
 ## MCP Servers

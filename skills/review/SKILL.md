@@ -32,7 +32,7 @@ fi
 - General guidelines (DRY, KISS, testing, etc.)
 - Git conventions (commit format, push behavior)
 - Language-specific rules (TypeScript, Python, etc.)
-- Project-specific tooling (bd/bv, btca, etc.)
+- Project-specific tooling (tk, btca, etc.)
 - Code style preferences (formatting, naming, etc.)
 
 ### 1. Run QA Tools

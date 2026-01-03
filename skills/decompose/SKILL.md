@@ -1,47 +1,47 @@
 ---
 name: decompose
-description: Break down plans/specs into atomic, self-contained task beads. Triggers on "decompose", "break down", "create tasks from plan". Asks clarifying questions until each task has complete implementation details.
+description: Break down plans/specs into atomic, self-contained tickets. Triggers on "decompose", "break down", "create tasks from plan". Asks clarifying questions until each ticket has complete implementation details.
 ---
 
 # Decompose
 
-Transform plans/specs into atomic, self-contained task beads using `bd create`. Each bead must be implementable without reading others.
+Transform plans/specs into atomic, self-contained tickets using `tk create`. Each ticket must be implementable without reading others.
 
 ## Workflow
 
-### 1. Pre-Decompose: Check Existing Work
+### 1. Check Existing Work
 
 ```bash
-bv --robot-suggest
+tk ls
+tk blocked
 ```
 
 Review:
-- Duplicates: Are there existing beads that cover this work?
-- Related: What beads should we reference as parents or dependencies?
-- Labels: What labels are in use for this domain?
+- Duplicates: Are there existing tickets that cover this work?
+- Related: What tickets should we reference as dependencies?
 
-### 2. Parse Plan → Bead Candidates
+### 2. Parse Plan → Ticket Candidates
 
 Break the plan into atomic tasks. For each candidate, gather:
 
 **Required attributes**:
 - Title (concise, imperative)
-- Type: `task` | `feature` | `bug` | `chore`
+- Type: `task` | `feature` | `bug` | `epic` | `chore`
 - Priority: `0` (critical) | `1` (high) | `2` (medium) | `3` (low) | `4` (backlog)
 - Description (what, why, constraints)
 - Acceptance criteria (testable, specific)
 
 **Optional attributes**:
-- Labels (domain, component, etc.)
-- Dependencies (`--deps blocks:id|related:id|parent:id`)
 - Assignee
+- External reference (e.g., gh-123, JIRA-456)
+- Dependencies
 
-### 3. Interview User for Each Bead
+### 3. Interview User for Each Ticket
 
-Until each bead has complete implementation details:
+Until each ticket has complete implementation details:
 
 ```text
-## Bead: [Title]
+## Ticket: [Title]
 
 **What needs doing?**
 - [ ] Actionable requirement
@@ -53,71 +53,68 @@ Until each bead has complete implementation details:
 
 **Dependencies?**
 - External: libraries, APIs, services?
-- Internal: other beads? (list IDs or describe for lookup)
+- Internal: other tickets? (list IDs or describe for lookup)
 
 **Acceptance?**
 - Testable success criteria
 - Specific test scenarios
 
 **Type/Priority?**
-- Type: task/feature/bug/chore?
+- Type: task/feature/bug/epic/chore?
 - Priority: 0(crit)/1(high)/2(med)/3(low)/4(backlog)?
-
-**Labels?** (optional)
 ```
 
 Ask until:
 - Exact file paths identified
 - Specific patterns/examples named
-- Dependencies mapped to existing bead IDs (or confirmed as new)
+- Dependencies mapped to existing ticket IDs (or confirmed as new)
 - Acceptance criteria are testable and specific
 - No "figure out later" items
 
-### 4. Create Beads
+### 4. Create Tickets
 
-For each bead (use `--json` for scriptability):
+For each ticket:
 
 ```bash
-bd create "[Title]" \
-  --type task \
-  --priority 2 \
-  --desc "[Description]" \
+tk create "[Title]" \
+  -t task \
+  -p 2 \
+  -d "[Description]" \
   --acceptance "[criterion1]; [criterion2]" \
-  --deps "blocks:bd-123;related:bd-456" \
-  --labels "frontend,api" \
-  --json
+  -a "[assignee]"
 ```
 
-Track created IDs for dependency references in subsequent beads.
+Then add dependencies:
+
+```bash
+tk dep <new-id> <depends-on-id>
+```
+
+Track created IDs for dependency references in subsequent tickets.
 
 ### 5. Post-Creation Validation
 
 ```bash
-bv --robot-insights
+tk dep tree <id>
+tk blocked
 ```
 
 Check:
-- **Cycles**: Any circular dependencies? Fix immediately.
-- **Orphaned**: Any beads without dependencies that should have them?
-- **Blockers**: Are critical-path beads properly prioritized?
-
-Fix issues using:
-```bash
-bd dep add <id> <depends-on-id> -t blocks
-bd update <id> -p 1
-```
+- **Cycles**: Any circular dependencies? Fix immediately with `tk undep`.
+- **Orphaned**: Any tickets without dependencies that should have them?
+- **Blockers**: Are critical-path tickets properly prioritized?
 
 ## Validation Checklist
 
-For each bead created:
+For each ticket created:
 - [ ] Title is imperative and specific
 - [ ] Type and priority are appropriate
 - [ ] Description explains what + why + constraints
 - [ ] Files to touch are named
 - [ ] Existing patterns are referenced
-- [ ] Dependencies are resolved to actual bead IDs
+- [ ] Dependencies are resolved to actual ticket IDs
 - [ ] Acceptance criteria are testable
-- [ ] Implementable without reading other beads
+- [ ] Implementable without reading other tickets
 
 ## Question Templates by Domain
 
@@ -140,22 +137,22 @@ For each bead created:
 ## Red Flags (Stop & Ask)
 
 - "Standard implementation" → Which file/pattern?
-- "Like existing X" → Which one? Reference by path or bead ID
+- "Like existing X" → Which one? Reference by path or ticket ID
 - "We'll decide later" → What decision is needed? When?
 - "Make it fast/secure/good" → What metrics? SLAs? Requirements?
 - "Many/some/a few" → Exact count or bounds?
 
 ## Common Patterns
 
-**Feature → beads decomposition**:
+**Feature → tickets decomposition**:
 1. Data model/migrations (if needed)
 2. Backend APIs/business logic
 3. Frontend components
 4. Integration tests
 5. Documentation
 
-**Bug fix → single bead**:
+**Bug fix → single ticket**:
 Type: `bug`, Priority based on severity (0-1 for critical/high)
 
-**Refactor → beads by layer**:
-Each bead should be one atomic change with its own acceptance criteria.
+**Refactor → tickets by layer**:
+Each ticket should be one atomic change with its own acceptance criteria.
