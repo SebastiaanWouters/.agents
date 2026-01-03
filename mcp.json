@@ -1,6 +1,6 @@
 {
-  "browsermcp": {
+  "playwriter": {
     "type": "local",
-    "command": ["npx", "-y", "@browsermcp/mcp@latest"]
+    "command": ["npx", "playwriter@latest"]
   }
 }
