@@ -75,11 +75,40 @@ detect_platform() {
     echo "${os}-${arch}"
 }
 
+# Detect package manager
+detect_pkg_manager() {
+    if command_exists apt-get; then
+        echo "apt"
+    elif command_exists yum; then
+        echo "yum"
+    elif command_exists dnf; then
+        echo "dnf"
+    elif command_exists pacman; then
+        echo "pacman"
+    elif command_exists apk; then
+        echo "apk"
+    else
+        echo ""
+    fi
+}
+
 # Check prerequisites
 check_prereqs() {
     local missing=()
+    local pkg_manager=$(detect_pkg_manager)
 
-    command_exists curl || command_exists wget || error "Either curl or wget is required"
+    command_exists curl || command_exists wget || {
+        local install_cmd=""
+        case "$pkg_manager" in
+            apt) install_cmd="sudo apt update && sudo apt install -y curl" ;;
+            yum) install_cmd="sudo yum install -y curl" ;;
+            dnf) install_cmd="sudo dnf install -y curl" ;;
+            pacman) install_cmd="sudo pacman -S curl" ;;
+            apk) install_cmd="sudo apk add curl" ;;
+        esac
+        error "Neither curl nor wget is required. Try:\n  $install_cmd"
+    }
+
     command_exists chmod || missing+=("chmod")
     command_exists mkdir || missing+=("mkdir")
 
@@ -92,24 +121,36 @@ check_prereqs() {
 download_file() {
     local url=$1
     local output=$2
+    local max_retries=3
+    local retry_count=0
 
-    if command_exists curl; then
-        local curl_path=$(command -v curl)
-        # Check for broken snap curl
-        if [[ $curl_path == *"/snap/"* ]]; then
-            if command_exists wget; then
-                wget -q --show-progress -O "$output" "$url"
+    while [[ $retry_count -lt $max_retries ]]; do
+        if command_exists curl; then
+            local curl_path=$(command -v curl)
+            # Check for broken snap curl
+            if [[ $curl_path == *"/snap/"* ]]; then
+                if command_exists wget; then
+                    wget -q --show-progress -O "$output" "$url" && return 0
+                else
+                    error "curl installed via snap has permission issues. Please reinstall curl or install wget."
+                fi
             else
-                error "curl installed via snap has permission issues. Please reinstall curl or install wget."
+                curl -fsSL --progress-bar --retry 3 -o "$output" "$url" && return 0
             fi
+        elif command_exists wget; then
+            wget -q --show-progress --tries=3 -O "$output" "$url" && return 0
         else
-            curl -fsSL --progress-bar -o "$output" "$url"
+            error "Neither curl nor wget is available"
         fi
-    elif command_exists wget; then
-        wget -q --show-progress -O "$output" "$url"
-    else
-        error "Neither curl nor wget is available"
-    fi
+
+        retry_count=$((retry_count + 1))
+        if [[ $retry_count -lt $max_retries ]]; then
+            warn "Download failed, retrying ($retry_count/$max_retries)..."
+            sleep 1
+        fi
+    done
+
+    error "Failed to download after $max_retries attempts. Check your network connection and try again."
 }
 
 # Download and verify checksum
@@ -147,6 +188,23 @@ Actual: $actual_checksum"
         success "Checksum verified"
     else
         warn "Could not verify checksum (shasum/sha256sum not available)"
+        local pkg_manager=$(detect_pkg_manager)
+        if [[ -n "$pkg_manager" ]]; then
+            info "Install checksum tools:"
+            case "$pkg_manager" in
+                apt) echo "  sudo apt install -y coreutils" ;;
+                yum) echo "  sudo yum install -y coreutils" ;;
+                dnf) echo "  sudo dnf install -y coreutils" ;;
+                pacman) echo "  sudo pacman -S coreutils" ;;
+                apk) echo "  sudo apk add coreutils" ;;
+            esac
+        fi
+    fi
+
+    # Verify binary is valid (not a 404 page or error)
+    if ! file "$tmp_binary" 2>/dev/null | grep -qE "(executable|binary|Mach-O|ELF)"; then
+        rm -f "$tmp_binary" "$tmp_checksum"
+        error "Downloaded file is not a valid binary. This might be a 404 page or download error."
     fi
 
     chmod +x "$tmp_binary"
@@ -165,9 +223,39 @@ detect_shell() {
     fi
 }
 
+# Check write permissions
+check_write_perms() {
+    local dir="$1"
+    if [[ ! -w "$dir" ]]; then
+        warn "No write permission for $dir"
+        return 1
+    fi
+    return 0
+}
+
 # Update shell profile
 update_shell_profile() {
     local shell=$(detect_shell)
+
+    # Check write permissions and try alternative dirs if needed
+    if ! check_write_perms "$INSTALL_DIR"; then
+        if [[ "$INSTALL_DIR" == "/usr/local/bin" ]]; then
+            if [[ -w "/usr/local/bin" ]]; then
+                # We have write perms, continue
+                :
+            elif [[ -w "$HOME/.local/bin" ]]; then
+                warn "No write access to /usr/local/bin, using $HOME/.local/bin"
+                INSTALL_DIR="$HOME/.local/bin"
+            elif mkdir -p "$HOME/.local/bin" 2>/dev/null; then
+                warn "No write access to /usr/local/bin, created $HOME/.local/bin"
+                INSTALL_DIR="$HOME/.local/bin"
+            else
+                error "Cannot write to install directory. Please choose a writable location and set AC_CLI_INSTALL_DIR"
+            fi
+        elif ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
+            error "Cannot create install directory $INSTALL_DIR. Please set AC_CLI_INSTALL_DIR to a writable location"
+        fi
+    fi
 
     # Create bin directory if needed
     mkdir -p "$INSTALL_DIR"
@@ -196,6 +284,11 @@ update_shell_profile() {
             local profile="$HOME/.bashrc"
             if [[ ! -f "$profile" ]]; then
                 profile="$HOME/.bash_profile"
+                if [[ ! -f "$profile" ]]; then
+                    # Create missing profile
+                    touch "$profile"
+                    info "Created missing $profile"
+                fi
             fi
             if ! grep -q "$INSTALL_DIR" "$profile" 2>/dev/null; then
                 {
@@ -215,7 +308,7 @@ update_shell_profile() {
                 {
                     echo ""
                     echo "# ac-cli"
-                    echo "export PATH=\"$INSTALL_DIR:\$PATH\""
+                    echo "set -x PATH \"$INSTALL_DIR\" \$PATH"
                 } >> "$HOME/.config/fish/config.fish"
                 success "Added $INSTALL_DIR to PATH in ~/.config/fish/config.fish"
                 refresh_cmd="source ~/.config/fish/config.fish"
@@ -256,6 +349,22 @@ verify_installation() {
     fi
 }
 
+# Check existing installation
+check_existing() {
+    local binary_path="$INSTALL_DIR/$BINARY_NAME"
+
+    if [[ -f "$binary_path" ]]; then
+        warn "Existing installation found at $binary_path"
+        warn "This will overwrite the existing binary."
+        read -p "Continue? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            info "Installation cancelled"
+            exit 0
+        fi
+    fi
+}
+
 # Main installation
 main() {
     echo ""
@@ -265,13 +374,27 @@ main() {
     # Check prerequisites
     check_prereqs
 
+    # Check disk space (need at least 50MB free)
+    if command_exists df; then
+        local free_space=$(df . 2>/dev/null | awk 'NR==2 {print $4}')
+        if [[ -n "$free_space" ]] && [[ $free_space -lt 50000 ]]; then
+            warn "Low disk space detected. Ensure at least 50MB is available."
+        fi
+    fi
+
+    # Check existing installation
+    check_existing
+
     # Detect platform
     local platform=$(detect_platform)
     info "Detected platform: $platform"
 
     # Create temporary directory
-    TMP_DIR=$(mktemp -d)
+    TMP_DIR=$(mktemp -d 2>/dev/null || mktemp -d -t ac-cli-install 2>/dev/null || {
+        error "Failed to create temporary directory"
+    })
     trap "rm -rf $TMP_DIR" EXIT
+    [[ ! -d "$TMP_DIR" ]] && error "Temporary directory creation failed"
 
     # Download and verify binary
     download_binary "$platform"
