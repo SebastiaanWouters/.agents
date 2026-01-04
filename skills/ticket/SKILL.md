@@ -1,6 +1,6 @@
 ---
 name: ticket
-description: Manage tickets with tk CLI. Triggers on "create ticket", "list tickets", "what's next", "blocked", "close ticket", "ticket status".
+description: Manage tickets with tk CLI. Triggers on "create ticket", "list tickets", "what's next", "blocked", "close ticket", "ticket status", "work on next ticket/issue".
 ---
 
 # Ticket Management
