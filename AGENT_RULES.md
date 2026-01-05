@@ -1,4 +1,4 @@
-# 21 Rules for AI Agents
+# 22 Rules for AI Agents
 
 1. **Rule of Modularity**: Write simple parts connected by clean interfaces.
 
@@ -41,3 +41,5 @@
 20. **Rule of Precision**: Tailor solutions to the specific case; avoid generic answers.
 
 21. **Rule of Restraint**: Do only what was asked; scope creep is the enemy of completion.
+
+22. **Rule of Verification**: Change without proof is speculation; test what you touch.
