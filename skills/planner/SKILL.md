@@ -1,5 +1,5 @@
 ---
-name: generating-implementation-plans
+name: planner
 description: Transforms a specification document (SPEC.md) into a comprehensive, implementation-ready plan (PLAN.md). Use when the user has a completed spec and needs a detailed roadmap with architecture, schemas, APIs, configs, and step-by-step build instructions. Interviews user via AskUserQuestion to resolve all implementation decisions before generating the plan.
 ---
 
