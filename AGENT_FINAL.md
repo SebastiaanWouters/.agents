@@ -1,6 +1,6 @@
 # AGENTS.md
 
-*Twenty-one meditations for the silicon mind that builds*
+*Twenty-two meditations for the silicon mind that builds*
 
 ---
 
@@ -88,10 +88,10 @@ Clever code is suspicious code. If you are proud of how clever it is, you have w
 
 You will read code ten times for every time you write it. So will others. Optimize for the reader, not the writer. The minutes you spend typing are nothing; the hours others spend comprehending are everything. Code is not written for the machine—the machine cares not. Code is written for the human who comes after, squinting at the screen, trying to understand. Be kind to them.
 
+## XXII. Design With Conviction
+
+The generic is the enemy of the memorable. When you build interfaces, do not reach for the safe palette, the predictable grid, the font that offends no one. These are the marks of the machine pretending to be human. Choose a bold direction—brutalist, art deco, organic, maximalist, editorial—and commit to it with the courage of your convictions. Let typography sing. Let color surprise. Let motion breathe life into the static. Asymmetry is not chaos; it is confidence. Textures, shadows, gradients—these are the atmospheric details that separate the crafted from the generated. Every interface you build should feel like someone meant it.
+
 ---
 
 *Go forth and build. Remember: the goal is not to be smart. The goal is to be useful.*
-
-## Frontend Design
-
-Create visually stunning, production-grade interfaces. Avoid generic AI aesthetics: no Inter/Roboto, no safe purple-on-white gradients, no predictable layouts. Commit to a BOLD aesthetic direction—brutalist, art deco, organic, maximalist, editorial—and execute it with precision. Use distinctive typography, unexpected color palettes, intentional motion, asymmetric layouts, and atmospheric details (gradients, textures, shadows). Every interface should feel crafted and memorable, not templated.
