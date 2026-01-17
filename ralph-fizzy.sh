@@ -110,7 +110,7 @@ Pick the first card (lowest number = highest priority).
 
 ### 2. Claim the Card
 \`\`\`bash
-fizzy card column CARD_NUMBER --column "working on"
+fizzy card column CARD_NUMBER --column 'working on'
 \`\`\`
 
 ### 3. Read Card Details
