@@ -462,15 +462,29 @@ fizzy comment update COMMENT_ID --card NUMBER [--body "HTML"] [--body_file PATH]
 fizzy comment delete COMMENT_ID --card NUMBER
 ```
 
-### Steps (To-Do Items)
+### Steps (To-Do Items / Acceptance Criteria)
 
 Steps are returned in `card show` response. No separate list command.
+**Use steps as acceptance criteria** — each step should be a verifiable condition for card completion.
 
 ```bash
 fizzy step show STEP_ID --card NUMBER
 fizzy step create --card NUMBER --content "Text" [--completed]
 fizzy step update STEP_ID --card NUMBER [--content "Text"] [--completed] [--not_completed]
 fizzy step delete STEP_ID --card NUMBER
+```
+
+**Creating acceptance criteria when creating cards:**
+```bash
+# Create card first
+CARD=$(fizzy card create --board BOARD_ID --title "Feature X" \
+  --description "<p>Description here</p>" | jq -r '.data.number')
+
+# Add acceptance criteria as steps
+fizzy step create --card $CARD --content "Unit tests pass"
+fizzy step create --card $CARD --content "Integration tests pass"
+fizzy step create --card $CARD --content "Documentation updated"
+fizzy step create --card $CARD --content "Code reviewed"
 ```
 
 ### Reactions
@@ -626,7 +640,7 @@ Fizzy has no native dependency system. Use this convention (compatible with ralp
 |--------|---------|
 | `not-now` | Blocked — has unmet dependencies |
 | `maybe` | Ready — all dependencies met, in backlog |
-| `working-on` | Active — someone is working on it |
+| `working on` | Active — someone is working on it |
 | `done` | Closed |
 
 ### Tags for Dependencies
