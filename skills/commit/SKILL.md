@@ -5,53 +5,34 @@ description: Create logical git commits with conventional messages. Triggers on 
 
 # Commit
 
-Analyze changes and create well-structured commits.
+**NEVER push. Commit only. NEVER mention AI/agent/LLM in message or author.**
 
-## Process
+## Flow
 
-1. **Analyze**: `git status`, `git diff`, `git diff --staged`
-2. **Group**: Related changes = 1 commit, unrelated = separate commits
-3. **Stage**: `git add <files>` or `git add -p` for partial
-4. **Commit**: Conventional format
-5. **Verify**: `git log --oneline -n 5`
+```
+git log --oneline -n 10   # inspect existing style
+git status && git diff    # analyze changes
+git add <files>           # stage (use -p for partial)
+git commit -m "msg"       # match existing style
+git log --oneline -n 3    # verify
+```
 
-## Conventional Commits
+## Style
 
-`<type>(<scope>): <description>`
+1. Match existing repo pattern (format, casing, scope, length)
+2. No pattern? Use conventional: `<type>(<scope>): <desc>`
 
-| Type | Use |
-|------|-----|
-| feat | new feature |
-| fix | bug fix |
-| refactor | restructure, no behavior change |
-| docs | documentation |
-| test | tests |
-| chore | deps, config, maintenance |
+**Types**: feat | fix | refactor | docs | test | chore
 
 ## Grouping
 
-**Same commit**: implementation + tests, multi-file feature, related type defs  
-**Separate**: unrelated fixes, independent features, deps (unless required by feature)
+- **1 commit**: impl+tests, multi-file feature, related types
+- **N commits**: unrelated fixes, independent features
 
-## Examples
+## Never
 
-```bash
-# simple
-git add src/utils/parser.ts
-git commit -m "fix(parser): handle empty input"
-
-# feature + tests
-git add src/Button.tsx src/Button.test.tsx
-git commit -m "feat(ui): add Button component"
-
-# complex with bullets
-git commit -m "refactor(api): restructure client" \
-  -m "- extract base class" \
-  -m "- add interceptors"
-```
-
-## Avoid
-
-- `git add .` without analysis
-- Generic: "fix bug", "update code", "wip"
-- Committing: .env, secrets, logs, node_modules, .DS_Store
+- `git add .` blindly
+- generic msgs: "fix bug", "update", "wip"
+- commit secrets, .env, logs, node_modules
+- push
+- mention AI/agent/assistant
