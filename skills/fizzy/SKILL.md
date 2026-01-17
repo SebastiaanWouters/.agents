@@ -616,6 +616,74 @@ Card descriptions and comments support HTML. For multiple paragraphs with spacin
 
 ---
 
+## Dependencies & Blocking
+
+Fizzy has no native dependency system. Use this convention (compatible with ralph-fizzy.sh):
+
+### Columns for Status
+
+| Column | Meaning |
+|--------|---------|
+| `not-now` | Blocked — has unmet dependencies |
+| `maybe` | Ready — all dependencies met, in backlog |
+| `working-on` | Active — someone is working on it |
+| `done` | Closed |
+
+### Tags for Dependencies
+
+Use `blocked-by:N` tags where `N` is the blocking card number:
+
+```bash
+# Mark card 45 as blocked by card 42
+fizzy card tag 45 --tag "blocked-by:42"
+fizzy card column 45 --column not-now
+
+# Card can have multiple blockers
+fizzy card tag 45 --tag "blocked-by:43"
+```
+
+### Unblocking Cards
+
+When a dependency is completed, unblock dependent cards:
+
+```bash
+# Find cards blocked by card 42
+fizzy card list --board BOARD_ID --column not-now --all | \
+  jq '.data[] | select(.tags[]?.title == "blocked-by:42") | .number'
+
+# For each dependent card:
+# 1. Remove the blocker tag (toggle off)
+fizzy card tag CARD_NUMBER --tag "blocked-by:42"
+
+# 2. Check if all blockers are removed
+TAGS=$(fizzy card show CARD_NUMBER | jq '[.data.tags[]?.title | select(startswith("blocked-by:"))] | length')
+
+# 3. If no more blockers, move to ready
+if [ "$TAGS" -eq 0 ]; then
+  fizzy card column CARD_NUMBER --column maybe
+fi
+```
+
+### Creating Cards with Dependencies
+
+```bash
+# Create a blocked card
+CARD=$(fizzy card create --board BOARD_ID \
+  --title "Implement feature Y" \
+  --description "<h2>Dependencies</h2><p>Blocked by: #42, #43</p>" | jq -r '.data.number')
+
+# Tag and place in blocked column
+fizzy card tag $CARD --tag "blocked-by:42"
+fizzy card tag $CARD --tag "blocked-by:43"
+fizzy card column $CARD --column not-now
+
+# Create a ready card (no dependencies)
+CARD=$(fizzy card create --board BOARD_ID --title "Implement feature X" | jq -r '.data.number')
+fizzy card column $CARD --column maybe
+```
+
+---
+
 ## Workflow Summary
 
 1. **Determine the action** - What does the user want?
