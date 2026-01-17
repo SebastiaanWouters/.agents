@@ -2,7 +2,10 @@
   "mcpServers": {
     "playwriter": {
       "command": "npx",
-      "args": ["playwriter@latest"]
+      "args": ["playwriter@latest"],
+      "env": {
+        "PLAYWRITER_AUTO_ENABLE": "1"
+      }
     }
   }
 }
