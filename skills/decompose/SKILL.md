@@ -5,47 +5,35 @@ description: Break down plans/specs into atomic, self-contained tickets. Trigger
 
 # Decompose
 
-Transform plans/specs into atomic, self-contained tickets using `tk create`. Each ticket must be implementable without reading others.
+Transform plans/specs into atomic, self-contained tickets. Each ticket must be implementable without reading others.
+
+> For `tk` CLI usage, see the **ticket** skill.
 
 ## Workflow
 
 ### 1. Check Existing Work
 
-```bash
-tk ls
-tk blocked
-```
-
-Review:
-- Duplicates: Are there existing tickets that cover this work?
-- Related: What tickets should we reference as dependencies?
+Run `tk ls` and `tk blocked` to review:
+- Duplicates: existing tickets that cover this work?
+- Related: tickets to reference as dependencies?
 
 ### 2. Parse Plan → Ticket Candidates
 
-Break the plan into atomic tasks. For each candidate, gather:
+Break into atomic tasks. For each, gather:
 
-**Required attributes**:
 - Title (concise, imperative)
 - Type: `task` | `feature` | `bug` | `epic` | `chore`
-- Priority: `0` (critical) | `1` (high) | `2` (medium) | `3` (low) | `4` (backlog)
+- Priority: `0` (critical) → `4` (backlog)
 - Description (what, why, constraints)
-- Acceptance criteria (testable, specific)
+- **Acceptance criteria** (REQUIRED - testable conditions that define "done")
+- Dependencies (internal ticket IDs, external refs)
 
-**Optional attributes**:
-- Assignee
-- External reference (e.g., gh-123, JIRA-456)
-- Dependencies
+### 3. Interview User
 
-### 3. Interview User for Each Ticket
-
-Until each ticket has complete implementation details:
-
-```text
-## Ticket: [Title]
+For each ticket, ask until fully specified:
 
 **What needs doing?**
-- [ ] Actionable requirement
-- [ ] Edge case handling
+- Actionable requirements, edge cases
 
 **Files & patterns?**
 - Which files to modify/create?
@@ -53,68 +41,34 @@ Until each ticket has complete implementation details:
 
 **Dependencies?**
 - External: libraries, APIs, services?
-- Internal: other tickets? (list IDs or describe for lookup)
+- Internal: other tickets?
 
-**Acceptance?**
+**Acceptance? (REQUIRED)**
 - Testable success criteria
 - Specific test scenarios
+- Edge cases to handle
 
-**Type/Priority?**
-- Type: task/feature/bug/epic/chore?
-- Priority: 0(crit)/1(high)/2(med)/3(low)/4(backlog)?
-```
-
-Ask until:
+Stop criteria:
 - Exact file paths identified
-- Specific patterns/examples named
-- Dependencies mapped to existing ticket IDs (or confirmed as new)
-- Acceptance criteria are testable and specific
+- Patterns/examples named
+- Dependencies mapped to ticket IDs
+- **Acceptance defines "done"**
 - No "figure out later" items
+
+**Never create a ticket without acceptance criteria.** Ask: "What must be true to close this ticket?"
 
 ### 4. Create Tickets
 
-For each ticket:
+Use `tk create` with all gathered attributes (see **ticket** skill for CLI reference).
 
-```bash
-tk create "[Title]" \
-  -t task \
-  -p 2 \
-  -d "[Description]" \
-  --acceptance "[criterion1]; [criterion2]" \
-  -a "[assignee]"
-```
+Track created IDs for dependency wiring with `tk dep` and `tk link`.
 
-Then add dependencies:
+### 5. Validate
 
-```bash
-tk dep <new-id> <depends-on-id>
-```
-
-Track created IDs for dependency references in subsequent tickets.
-
-### 5. Post-Creation Validation
-
-```bash
-tk dep tree <id>
-tk blocked
-```
-
-Check:
-- **Cycles**: Any circular dependencies? Fix immediately with `tk undep`.
-- **Orphaned**: Any tickets without dependencies that should have them?
-- **Blockers**: Are critical-path tickets properly prioritized?
-
-## Validation Checklist
-
-For each ticket created:
-- [ ] Title is imperative and specific
-- [ ] Type and priority are appropriate
-- [ ] Description explains what + why + constraints
-- [ ] Files to touch are named
-- [ ] Existing patterns are referenced
-- [ ] Dependencies are resolved to actual ticket IDs
-- [ ] Acceptance criteria are testable
-- [ ] Implementable without reading other tickets
+Run `tk dep tree <id>` and `tk blocked`. Check:
+- No circular dependencies
+- No orphaned tickets missing deps
+- Critical-path tickets prioritized
 
 ## Question Templates by Domain
 

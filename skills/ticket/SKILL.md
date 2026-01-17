@@ -23,6 +23,7 @@ Commands:
     -p, --priority         Priority 0-4, 0=highest [default: 2]
     -a, --assignee         Assignee
     --external-ref         External reference (e.g., gh-123, JIRA-456)
+    --parent               Parent ticket ID
   start <id>               Set status to in_progress
   close <id>               Set status to closed
   reopen <id>              Set status to open
@@ -30,6 +31,8 @@ Commands:
   dep <id> <dep-id>        Add dependency (id depends on dep-id)
   dep tree [--full] <id>   Show dependency tree (--full disables dedup)
   undep <id> <dep-id>      Remove dependency
+  link <id> <id> [id...]   Link tickets together (symmetric)
+  unlink <id> <target-id>  Remove link between tickets
   ls [--status=X]          List tickets
   ready                    List open/in-progress tickets with deps resolved
   blocked                  List open/in-progress tickets with unresolved deps
@@ -52,9 +55,13 @@ tk ls         # all tickets
 ```
 
 ### Create ticket
+Always include `--acceptance` to define completion criteria:
 ```bash
-tk create "Fix auth timeout" -t bug -p 1 -d "Users get logged out after 5 min"
-tk create "Add dark mode" -t feature --acceptance "Toggle in settings; persists across sessions"
+tk create "Fix auth timeout" -t bug -p 1 \
+  -d "Users get logged out after 5 min" \
+  --acceptance "Session lasts 24h; refresh token extends session; test covers timeout logic"
+tk create "Add dark mode" -t feature \
+  --acceptance "Toggle in settings; persists across sessions; respects system preference"
 ```
 
 ### Track progress
@@ -62,6 +69,7 @@ tk create "Add dark mode" -t feature --acceptance "Toggle in settings; persists 
 tk start <id>   # mark in_progress
 tk close <id>   # mark closed
 tk dep <id> <dep-id>  # add dependency
+tk link <id> <id>     # link related tickets (symmetric)
 ```
 
 ### Query/export
