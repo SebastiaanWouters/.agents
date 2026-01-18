@@ -54,11 +54,12 @@ while [ "$iteration" -lt "$MAX_ITERATIONS" ]; do
 1. Run 'tk ready' to find available tickets. Pick the highest-priority one (lowest number = highest priority).
 2. Run 'tk start <id>' to claim the ticket.
 3. Implement the feature/fix described in the ticket.
-4. Run the project's build/typecheck/lint commands (check AGENTS.md or package.json/Makefile/etc).
-5. Run the project's test suite to verify your changes.
-6. Update knowledge.md with any discoveries or notes for future work.
-7. Make a git commit with a descriptive message referencing the ticket.
-8. Run 'tk close <id>' to mark the ticket done.
+4. review the code and make changes/improvements where needed
+5. Run the project's build/typecheck/lint commands (check AGENTS.md or package.json/Makefile/etc).
+6. Run the project's test suite to verify your changes.
+7. Update knowledge.md with any discoveries or notes for future work.
+8. Make a git commit with a descriptive message referencing the ticket.
+9. Run 'tk close <id>' to mark the ticket done.
 ONLY WORK ON A SINGLE TICKET.
 If after closing, 'tk ready' shows no more tickets, output <promise>COMPLETE</promise>."
 
